@@ -1,0 +1,59 @@
+Version 1.14:
+- fixed a bug in startup that should have caused a crash,
+  where RunSynchronousFunction tried to remove the thread
+  from the scheduler, but the compiler used the arrayp
+  overload of array Remove. decided to change the names
+  of the array methods and make coercions explicit.
+- cleaned up some coercions and type mismatches that cause
+  problems with modern compilers and 64-bit systems.
+- discovered that the database format depends on 32-bit
+  pointer sizes. it saves pointer values as 32-bit ints,
+  as tokens to remap when the database is loaded again.
+  to allow 64-bit builds, it will need to do some mapping
+  (map all pointers to int tokens) at save time, which
+  retains database compatibility.
+
+Version 1.13:
+- removed pre-emptive thread scheduling because there was
+  no locking or atomic mechanism in the language and pre-
+  emptive concurrency semantics are counter-productive.
+- added 'yield()' built-in function to support co-operative
+  multi-tasking between threads (note: threads already yield
+  whenever they are blocked or asleep; yield() is only
+  necessary for long-running threads that never read, write
+  or sleep.)
+- any thread that runs for 1 million instructions without
+  blocking or yielding will receive an asynchronous "too
+  long without yield" (E_NO_YIELD, -30) error, and after a
+  further 1000 instructions without yielding the thread will
+  be terminated without notice (its stack will be unwound
+  and it will enter the stopped state with null exit value.)
+  this prevents infinite loops from hanging the server.
+  recommended practice for interactive loops: wrap the
+  handling of entered commands in a try-catch block, and
+  always yield() in the catch handler before printing the
+  error traceback.
+
+Version 1.12:
+- fixed shutdown stall, the server used to wait for more
+  socket activity before shutting down giving possibly
+  large shutdown times.
+- fixed bug in "new array(N)", arrays were always created
+  empty instead of containing N elements set to null.
+- fixed thread scheduling error, causing the scheduler to
+  skip threads when other threads terminated. caused nasty
+  stalls, because the socket select() time is set to the
+  minimum wait time across all running threads.
+- fixed non-blocking write operations, these used to stall
+  if there was no other activity (threads running, sockets
+  being read, etc)
+- under Win32 crypt() is now implemented using libdes.
+
+Version 1.11:
+- probably never existed.
+
+Version 1.10:
+- a few fixes, no idea what they were now.
+
+Version 1.0:
+- initial release.

@@ -1,0 +1,276 @@
+
+[$.area.campus.entrance]
+[$.area.campus.path1]
+[$.area.campus.path2]
+[$.area.campus.path3]
+[$.area.campus.admin]
+[$.area.campus.wpath1]
+[$.area.campus.epath1]
+
+[$.area.beach.beach]
+[$.area.beach.beach1]
+[$.area.beach.beach2]
+[$.area.beach.beach3]
+[$.area.beach.beach4]
+[$.area.beach.beach5]
+[$.area.beach.beach6]
+[$.area.beach.beach7]
+
+[$.area.plane.plane1]
+[$.area.plane.plane2]
+
+[$.area.admin.common_room]
+[$.area.admin.peace]
+[$.home.mario.workroom]
+[$.home.dastari.workroom]
+[$.home.dl.workroom]
+[$.home.dl.garden]
+[$.home.snow.workroom]
+
+[$.area.campus.entrance]
+-> $.lib.basic.room
+
+name = "Outside the University Gates";
+desc = "The main gates of the university tower above you. They stand open, welcoming students and visitors alike. Through the gates, you can see a path heading toward the buildings of the campus.";
+actions = ["The gates creak, as they swing slightly in the breeze.", "A gust of wind nearly blows you off your feet."];
+contents = [$.save.clone.archchancellor];
+exits = [["north",$.area.campus.path1]];
+
+
+[$.area.campus.path1]
+-> $.lib.basic.room
+
+name = "Path Inside the University Gates";
+desc = "The pebble path leads from the main gates of the campus, toward a flat grass area in front of the main buildings.";
+exits = [["north",$.area.campus.path2], ["south",$.area.campus.entrance]];
+actions = ["A gust of wind nearly blows you off your feet."];
+
+
+[$.area.campus.path2]
+-> $.lib.basic.room
+
+name = "Path Through University Grounds";
+desc = "The pebble path leads from the main gates of the campus, toward a flat grass area in front of the main buildings.";
+exits = [["north",$.area.campus.path3], ["south",$.area.campus.path1]];
+actions = ["A gust of wind nearly blows you off your feet."];
+
+
+[$.area.campus.path3]
+-> $.lib.basic.room
+
+name = "Outside Administration Building";
+desc = "The pebble path passes through the grassy area here. Steps lead north from the end of the path into the administration building. To the east and west, paths lead around the building.";
+exits = [["north",$.area.campus.admin],["south",$.area.campus.path2],["east",$.area.campus.epath1],["west",$.area.campus.wpath1]];
+actions = ["A gust of wind nearly blows you off your feet.","You think you hear a gardener shout something about keeping off the grass."];
+
+
+[$.area.campus.admin]
+-> $.lib.basic.room
+
+name = "Foyer of Administration Building";
+desc = "The foyer of the administration building looks old, and smells of varnished wood. A receptionist stands behind the desk, looking at you expectantly.";
+exits = [["south",$.area.campus.path3], ["up", $.area.admin.common_room]];
+contents = [$.save.clone.receptionist];
+actions = ["The loud ticking of a clock begins to get on your nerves.","You hear a muffled scream from somewhere in the building.","The sound of a radio reaches you from one of the offices.","You hear the footfalls of someone in the upper floors of the building."];
+
+
+[$.area.campus.epath1]
+-> $.lib.basic.room
+
+name = "Path Around Administration Building";
+desc = "The path leads east around the administration building. It stops right here, at the edge of reality!";
+exits = [["west",$.area.campus.path3]];
+actions = ["The edge of reality flaps about mind-bogglingly."];
+
+
+[$.area.campus.wpath1]
+-> $.lib.basic.room
+
+name = "Path to Pebble Beach";
+desc = "The path leads west past the administration building and down to a small pebble beach.";
+exits = [["east",$.area.campus.path3], ["west", $.area.beach.beach4]];
+
+
+[$.area.beach.beach]
+-> $.lib.basic.room
+
+name = "Pebble Beach";
+desc = "The beach, made up entirely of small grey pebbles, stretches to the north and south. To the east, a steep incline rises high above you.";
+actions = ["A wave crashes to the shore, showering you with spray.","The faint squawk of a seagull reaches you from above.","A mosquito buzzes around you looking for some exposed flesh."];
+
+
+[$.area.beach.beach1]
+-> $.area.beach.beach
+
+desc = "A large outcrop of rocks marks the northern end of the beach here. A steep incline rises above you to the east.";
+exits = [["south", $.area.beach.beach2]];
+contents = [$.save.clone.kitten1];
+
+
+[$.area.beach.beach2]
+-> $.area.beach.beach
+
+exits = [["north", $.area.beach.beach1], ["south", $.area.beach.beach3]];
+
+
+[$.area.beach.beach3]
+-> $.area.beach.beach
+
+exits = [["north", $.area.beach.beach2], ["south", $.area.beach.beach4]];
+
+
+[$.area.beach.beach4]
+-> $.area.beach.beach
+
+desc = "The beach, made up entirely of small grey pebbles, stretches to the north and south. To the east, a steep incline rises high above you. A path winds its way up the incline.";
+exits = [["north", $.area.beach.beach3], ["south", $.area.beach.beach5], ["east", $.area.campus.wpath1]];
+contents = [$.save.clone.gaspode];
+
+
+[$.area.beach.beach5]
+-> $.area.beach.beach
+
+exits = [["north", $.area.beach.beach4], ["south", $.area.beach.beach6]];
+
+
+[$.area.beach.beach6]
+-> $.area.beach.beach
+
+exits = [["north", $.area.beach.beach5], ["south", $.area.beach.beach7]];
+
+
+[$.area.beach.beach7]
+-> $.area.beach.beach
+
+desc = "A large outcrop of rocks marks the southern end of the beach here. A steep incline rises above you to the east.";
+exits = [["north", $.area.beach.beach6]];
+contents = [$.save.clone.kitten2];
+
+
+[$.area.plane.plane1]
+-> $.lib.basic.room
+
+name = "Vast, flat planes";
+desc = "You are standing on the hard packed dirt of a vast, flat plane.  Tufts of dry grass sparsely populate the area.  Far to the north, a jagged range of mountains is visible, while to the east you can see the ocean.  To the west, a forest begins, while the plane continues south to the horizon.";
+actions = ["The wind blows across the plane, rattling the dry grasses."];
+exits = [["north", $.area.plane.plane2], ["south", $.area.plane.plane2], ["west", $.area.plane.plane2], ["east", $.area.plane.plane2]];
+
+
+[$.area.plane.plane2]
+-> $.lib.basic.room
+
+name = "Vast, flat planes";
+desc = "You are standing on the hard packed dirt of a vast, flat plane.  Tufts of dry grass sparsely populate the area.  Far to the north, a jagged range of mountains is visible, while to the east you can see the ocean.  To the west, a forest begins, while the plane continues south to the horizon.";
+actions = ["The wind blows across the plane, rattling the dry grasses."];
+exits = [["north", $.area.plane.plane1], ["south", $.area.plane.plane1], ["west", $.area.plane.plane1], ["east", $.area.plane.plane1]];
+
+
+[$.area.admin.common_room]
+-> $.lib.basic.room
+
+name = "Creator Common Room";
+desc = "You are standing in the creator common room, All around you there are frogs hopping about their buisness and doing the work everyone else thinks that you do. Quite surpisingly they never seem to get tired, But as they say `Once a frog always a frog`. There are various portals that lead to places in the mortal realm.";
+actions = ["A frog wanders up to you and gets you to sign a piece of paper. Yet another way to make it look like you actaully work.","One of the frogs seems to be staring at you; which one it is you can't quite tell."];
+exits = [["down", $.area.campus.admin],["west", $.home.dastari.workroom],["east", $.home.mario.workroom]];
+
+
+[$.area.admin.peace]
+-> $.lib.basic.room
+
+name = "A peaceful area";
+desc = "This is a very peaceful area with no annoying NPC's or room actions ;)";
+
+
+
+[$.mud.npc.archchancellor]
+-> $.lib.basic.living
+
+id = "archchancellor"
+name = "Archchancellor"
+unique = 1
+desc = "He's a tall balding man carrying something that looks disturbingly like a large wooden mace."
+actions = ["'Hello there, young student thingy.", ":smiles at you disconcertingly.", "'I sincerely hope you're doing well with your studies.", "'I expect you'll be graduating some time within the next decade?", ":mutters something to himself.", ":stares off into space.", ":peers critically at you."]
+wander = 1
+
+
+[$.mud.npc.receptionist]
+-> $.lib.basic.living
+
+id = "receptionist"
+name = "Receptionist"
+unique = 1
+desc = "She is old, wears red glasses and stares at you like you are interrupting something very important."
+actions = ["'Well, what do you want?", ":stares stonily at you.","'I hope it's something important. I have work to do you know.",":grumbles to herself.",":taps her foot impatiently.","'Are you going to keep me waiting all day?"]
+
+
+[$.mud.npc.gaspode]
+-> $.lib.basic.living
+
+id = "gaspode"
+name = "Gaspode the Wonder Dog"
+unique = 1
+desc = "He is just a scruffy, dirty dog."
+actions = ["You become aware of a strange smell, a bit like a very old and slightly damp nursery rug.", "Someone begins to play a harmonica. There seems to be a tune, but most of the notes are wrong.", "'Woof bloody woof.", "'I expect you're wondering, how come I'm talking.", ":industriously scratches one ear with his hind leg."]
+wander = 1
+
+
+[$.mud.npc.kitten]
+-> $.lib.basic.living
+
+id = "kitten";
+name = "tiny little fluffy kitten";
+desc = "It is a tiny little fluffy kitten. Its wet fur hangs off it pitifully.";
+actions = [":meows pitifully.", ":looks up at you with sad, lonely eyes.", ":rubs its head against your legs.", ":shakes some of the water off its fur."];
+wander = 1;
+
+
+[$.mud.item.rock]
+-> $.lib.basic.item
+
+id = "rock";
+name = "rock";
+desc = "It is a small black mineral rock.";
+
+
+[$.mud.item.frog]
+-> $.lib.basic.item
+
+id = "frog";
+name = "frog";
+desc = "It is a small green toy frog, made from soft plastic.";
+
+
+
+[$.save.clone.archchancellor]
+-> $.mud.npc.archchancellor
+
+location = $.area.campus.entrance;
+
+
+[$.save.clone.receptionist]
+-> $.mud.npc.receptionist
+
+location = $.area.campus.admin;
+
+
+[$.save.clone.gaspode]
+-> $.mud.npc.gaspode
+
+location = $.area.beach.beach4;
+
+
+[$.save.clone.kitten1]
+-> $.mud.npc.kitten
+
+location = $.area.beach.beach1;
+
+
+[$.save.clone.kitten2]
+-> $.mud.npc.kitten
+
+location = $.area.beach.beach7;
+
+
+[$.lib.daemon.npcact]
+npcs = [save.clone.archchancellor, save.clone.receptionist, save.clone.gaspode, save.clone.kitten1, save.clone.kitten2];
+

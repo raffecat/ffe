@@ -1,0 +1,4106 @@
+
+[$.lib.system]
+[$.lib.global]
+[$.lib.daemon]
+[$.save.log.master]
+
+[$]
+-> $.lib.system
+
+[$.lib.system]
+-> $.lib.global
+
+daemons = $.lib.daemon
+log = $.save.log.master
+
+startup()
+{
+    // Startup function is called when the mud starts up
+
+    console( "--> Quintiqua mudlib 1.0 starting " + this.mudName +
+      " version " + this.mudVersion );
+
+    oDaemons = this.daemons;
+    oLog = this.log;
+
+    // Call 'Startup' in all mud daemons
+    foreach( sName in oDaemons )
+    {
+        try
+        {
+            oDaemon = oDaemons[sName];
+            if( functionp(oDaemon.Startup) ) oDaemon.Startup();
+        }
+        catch( err )
+        {
+            console( "Error starting daemon '" + sName + "':" );
+            console( this.DescribeError( err ) );
+
+            oLog.LogError( err, "Error starting daemon '" + sName + "'" );
+        }
+    }
+}
+
+master()
+{
+    // Master function is always running
+
+    repeat
+    {
+        oDaemons = this.daemons;
+        oLog = this.log;
+
+        // Reset all mud daemons
+        foreach( sName in oDaemons )
+        {
+            try
+            {
+                oDaemon = oDaemons[sName];
+                if( functionp(oDaemon.Reset) ) oDaemon.Reset();
+            }
+            catch( err )
+            {
+                console( "Error resetting daemon '" + sName + "':" );
+                console( this.DescribeError( err ) );
+
+                oLog.LogError( err, "Error resetting daemon '" + sName + "'" );
+            }
+        }
+
+        sleep( 60 );
+    }
+}
+
+catch( nError, sDesc, arCallStack )
+{
+    try err = [ nError, sDesc, arCallStack ];
+
+    // Report the error on the console
+    try
+    {
+        sError = this.DescribeError( err, 1 );
+        console( sError );
+    }
+    
+    // Report the error to any on-line creators
+    try arUsers = this.loginDaemon.onLineList;
+    if( arrayp(arUsers) )
+    {
+        foreach( oUser in arUsers )
+        {
+            try if( oUser.creator ) oUser.ReportError( err, 1 );
+        }
+    }
+}
+
+
+[$.lib.system.recovered]
+
+
+[$.lib.daemon.login]
+[$.lib.daemon.terminal]
+[$.lib.room.void]
+
+[$.lib.global]
+
+mudName = "Quintiqua";
+mudVersion = "3.0";
+root = $;
+loginDaemon = $.lib.daemon.login;
+terminalDaemon = $.lib.daemon.terminal;
+void = $.lib.room.void;
+oppositeExit = [ "north" : "the south", "south" : "the north", "east" : "the west", "west" : "the east", "northeast" : "the southwest", "northwest" : "the southeast", "southeast" : "the northwest", "southwest" : "the northeast", "up" : "above", "down" : "below" ];
+allowedExits = [ "north" : 1, "south" : 1, "east" : 1, "west" : 1, "northeast" : 1, "southeast" : 1, "northwest" : 1, "southwest" : 1, "up" : 1, "down" : 1 ];
+
+ListItems( arItems, oAgent )
+{
+    if( !arrayp(arItems) ) arItems = [arItems];
+
+    //arItems -= [null];
+    //arCopy = arItems - [oAgent];
+    arCopy = arItems;
+    nRemain = nSize = sizeof(arCopy);
+    if( nSize )
+    {
+        sResult = "";
+        foreach( oThing in arCopy )
+        {
+            // Get the item's name for this observer
+            sName = oThing.Name( oAgent );
+            if( search( "aeiou", sName[0..0] ) != -1 ) sName = "an " + sName;
+            else if( search( "bcdfghjklmnpqrstvwxyz", sName[0..0] ) != -1 ) sName = "a " + sName;
+            sResult += sName;
+            nRemain -= 1;
+            if( nRemain > 1 ) sResult += ", ";
+            else if( nRemain == 1 ) sResult += " and ";
+        }
+        return sResult;
+    }
+
+    return "";
+}
+
+ListMultipleShort( arItems, oAgent )
+{
+    if( !arrayp(arItems) ) arItems = [arItems];
+
+    //arItems -= [null];
+    //arCopy = arItems - [oAgent];
+    arCopy = arItems;
+    nRemain = nSize = sizeof(arCopy);
+    if( nSize )
+    {
+        sResult = "";
+        foreach( oThing in arCopy )
+        {
+            // Get the item's short description for this observer
+            sResult += oThing.Short( oAgent );
+            nRemain -= 1;
+            if( nRemain > 1 ) sResult += ", ";
+            else if( nRemain == 1 ) sResult += " and ";
+        }
+        if( nSize > 1 ) return sResult + " are here.";
+        else return sResult + " is here.";
+    }
+
+    return "";
+}
+
+DescribeError( err, bUncaught )
+{
+    // err = [ number, description, call-stack[ fnCall, nLine, ... ] ]
+
+    sResult = "--- \n";
+
+    try
+    {
+        // Build a nice runtime error description and call stack
+        if( bUncaught ) sResult += "uncaught runtime error:\n";
+        sResult += err[1] + " (" + err[0] + ")\n";
+        arStack = err[2];
+        i = 0;
+        nLen = sizeof(arStack);
+        while( i < nLen )
+        {
+            fnCall = arStack[i];
+            nLine = arStack[i + 1];
+            i += 2;
+            sPath = object_path( function_context(fnCall) );
+            if( !sPath ) sPath = "(object)";
+            sResult += function_name( fnCall ) + " at line " + nLine + ", in " + sPath + "\n";
+        }
+
+        return sResult;
+    }
+    catch( ierr )
+    {
+    }
+
+    try
+    {
+        // Don't Panic. Just add any info we can.
+        sResult += "[Eek! Error in DescribeError]\n";
+        sResult += "description: " + ierr[1] + "\n";
+        sResult += "number: " + ierr[0] + "\n";
+        sResult += "line: " + ierr[2][1] + "\n";
+        sResult += "[Error was: " + ierr[1] + " (" + ierr[0] + ") at line " + ierr[2][1] + "]\n";
+    }
+
+    return sResult;
+}
+
+Wrap( sText, nCols, nLines )
+{
+    if( !integerp(nLines) ) nLines = -1;
+    nTotalLen = length(sText);
+
+    sResult = "";
+    sPrefix = "#";
+    sNewLine = "\n";
+    nStart = 0;
+    nLine = 0;
+
+    while( nStart < nTotalLen )
+    {
+        // Find the next newline sequence
+        nLen = search( sText, sNewLine, nStart );
+        if( nLen == -1 ) nLen = nTotalLen;
+        nTotal = 0;
+
+        // Word-wrap a single line of the text
+        repeat
+        {
+            // Find the next colour prefix symbol
+            nOfs = search( sText, sPrefix, nStart );
+            if( nOfs > nLen || nOfs < 0 ) nOfs = nLen;
+            nFound = nOfs - nStart;
+
+            // Check if we've found enough chars for a whole line
+            if( nTotal + nFound >= nCols )
+            {
+                // Yes we have no bananas (wrap here)
+                nEnd = nOfs - (( nTotal + nFound ) - nCols);
+
+                // Look for the preceding space
+                while( nEnd > 0 && sText[nEnd..nEnd] != " " ) nEnd -= 1;
+                //if( !nEnd ) nEnd = nNextLine - 1;
+
+                // Look for the end of the preceding word
+                while( nEnd > 0 && sText[nEnd..nEnd] == " " ) nEnd -= 1;
+
+                // This is where we do our word-wrap
+                sResult += sText[nStart..nEnd] + sNewLine;
+
+                // Advance to the next word
+                nEnd += 1;
+                while( nEnd < nLen && sText[nEnd..nEnd] == " " ) nEnd += 1;
+
+                nLine += 1;
+                if( nLine == nLines ) return [ sResult[0..-3], nEnd ];
+                if( nEnd == nLen ) break;
+
+                // Set up for the next line
+                nTotal = 0;
+                nStart = nEnd;
+
+                continue;
+            }
+
+            // Keep the bit between the start and the prefix, and the colour code itself
+            sResult += sText[nStart..nOfs+1];
+            nTotal += nFound;
+
+            if( nOfs >= nLen ) break;
+            nStart = nOfs + 2;
+        }
+
+        // Skip the newline sequence (handled by word-wrap)
+        nStart = nLen + 2;
+    }
+
+    if( nLines > 0 ) return [ sResult, 0 ];
+    return sResult;
+}
+
+FindPathName( sPath, oContext )
+{
+    // Find the last dot in the path
+    nLast = rsearch( sPath, "." );
+    if( nLast > -1 )
+    {
+        // Find the target object
+        oResult = find_object( sPath[..nLast - 1], oContext );
+        if( !oResult ) return null;
+        
+        return [ oResult, sPath[nLast + 1..] ];
+    }
+    else
+    {
+        return [ oContext, sPath ];
+    }
+}
+
+FindPathValue( sPath, oContext )
+{
+    oResult = find_object( sPath );
+    if( oResult != null ) return oResult;
+
+    // Find the last dot in the path
+    nLast = rsearch( sPath, "." );
+    if( nLast > -1 )
+    {
+        // Find the target object
+        oResult = find_object( sPath[..nLast - 1], oContext );
+        if( !oResult ) return null;
+        
+        return oResult[sPath[nLast + 1..]];
+    }
+    
+    return oContext[sPath];
+}
+
+RepeatString( sString, nRepeat )
+{
+    sResult = "";
+    while( nRepeat > 0 )
+    {
+        sResult += sString;
+        nRepeat -= 1;
+    }
+    return sResult;
+}
+
+PadString( sText, nCols )
+{
+    nLen = length(sText);
+    if( nLen >= nCols ) return sText[0..nCols - 1];
+    return sText + this.RepeatString( " ", nCols - nLen );
+}
+
+Center( sText, nCols )
+{
+    nLen = length(sText);
+    if( nLen >= nCols ) return sText[0..nCols - 1];
+    return this.RepeatString( " ", nCols / 2 - nLen / 2 ) + sText;
+}
+
+Split( sText, sDelim )
+{
+    if( !stringp(sDelim) ) sDelim = " ";
+
+    // Split around the delimiter if present
+    nOfs = search( sText, ":" );
+    if( nOfs > -1 )
+    {
+        return [ sText[0..nOfs-1], sText[nOfs+1..] ];
+    }
+    else
+    {
+        return [ sText ];
+    }
+}
+
+DisplayMenu( oUser, sTitle, arOptions, sPrompt )
+{
+    if( !stringp(sPrompt) ) sPrompt = "Please enter your choice: ";
+
+    // Build the menu string and options map
+    sMenu = "\n" + sTitle + "\n\n";
+    mpOptions = new mapping;
+    nOption = 1;
+    foreach( sOption in arOptions )
+    {
+        // Check for seperator items
+        if( sOption == "" )
+        {
+            sMenu += "\n";
+            continue;
+        }
+
+        // Split around the delimiter (colon) if present
+        nOfs = search( sOption, ":" );
+        if( nOfs > -1 )
+        {
+            sCmd = lower_case( sOption[0..nOfs-1] );
+            sOption = sOption[nOfs+1..];
+        }
+        else
+        {
+            sCmd = to_string( nOption );
+            nOption += 1;
+        }
+
+        // Add the option to the menu
+        sMenu += "  " + sCmd + ". " + sOption + "\n";
+        mpOptions[sCmd] = 1;
+    }
+
+    // Display the menu
+    oUser.Message( sMenu );
+
+    repeat
+    {
+        // Read and validate the user's choice
+        sChoice = lower_case( trim( oUser.ReadLine( sPrompt ) ) );
+        if( exists( mpOptions, sChoice ) )
+        {
+            oUser.Message( "" );
+            return sChoice;
+        }
+        if( length( sChoice ) )
+        {
+            // Display an error
+            oUser.Message( "\nPlease select one of the options from the menu." );
+        }
+        else
+        {
+            // Display the menu
+            oUser.Message( sMenu );
+        }
+    }
+}
+
+
+[$.lib.basic.daemon]
+-> $.lib.global
+
+mainThread = null;
+
+Reset()
+{
+    if( functionp(this.Main) )
+    {
+        if( !this.mainThread ) this.mainThread = thread this.Main();
+    }
+}
+
+
+[$.lib.daemon.terminal]
+-> $.lib.basic.daemon
+
+termEscSeq = [ "default" : [ "#" : "#" ], "ansi" : [ "#" : "#", "n": "\x1B[0m\x1B[37m", "L": "\x1B[1m", "F": "\x1B[5m", "r": "\x1B[0m\x1B[31m", "g": "\x1B[0m\x1B[32m", "b": "\x1B[0m\x1B[34m", "c": "\x1B[0m\x1B[36m", "m": "\x1B[0m\x1B[35m", "y": "\x1B[0m\x1B[33m", "o": "\x1B[0m\x1B[33m", "w": "\x1B[0m\x1B[37m", "k": "\x1B[0m\x1B[30m", "R": "\x1B[1m\x1B[31m", "G": "\x1B[1m\x1B[32m", "B": "\x1B[1m\x1B[34m", "C": "\x1B[1m\x1B[36m", "M": "\x1B[1m\x1B[35m", "Y": "\x1B[1m\x1B[33m", "O": "\x1B[1m\x1B[33m", "W": "\x1B[1m\x1B[37m", "K": "\x1B[1m\x1B[30m" ] ];
+
+ResolveColour( sText, sTerm )
+{
+    mpEscSeq = this.termEscSeq[ sTerm ];
+    nLen = length(sText);
+
+    sResult = "";
+    sPrefix = "#";
+    nStart = 0;
+
+    repeat
+    {
+        nOfs = search( sText, sPrefix, nStart );
+        if( nOfs >= 0 )
+        {
+            // Keep the bit between the start and the prefix
+            if( nOfs ) sResult += sText[nStart..nOfs-1];
+
+            // Extract the colour character
+            nOfs += 1;
+            sChar = sText[nOfs..nOfs];
+            nStart = nOfs + 1;
+
+            // Add the colour escape sequence into the string
+            if( mpEscSeq[sChar] ) sResult += mpEscSeq[sChar];
+        }
+        else return sResult + sText[nStart..-1];
+    }
+}
+
+
+[$.lib.daemon.roomact]
+-> $.lib.basic.daemon
+
+baseTime = 60;
+randomTime = 60;
+
+Main()
+{
+    repeat
+    {
+        // Wait a while between actions
+        sleep( this.baseTime + random( this.randomTime ) );
+
+        // Perform an action in each occupied room
+        foreach( oRoom in this.loginDaemon.UserLocations() )
+        {
+            if( objectp(oRoom) ) oRoom.RandomAction();
+        }
+    }
+}
+
+
+[$.lib.daemon.npcact]
+-> $.lib.basic.daemon
+
+baseTime = 30
+randomTime = 30
+actionChance = 50
+baseTime = 3
+randomTime = 3
+xnpcs = []
+
+Main()
+{
+    repeat
+    {
+        // Wait a while between actions
+        sleep( this.baseTime + random( this.randomTime ) );
+
+        // Perform an action on each npc based on chance
+        nChance = this.actionChance;
+        foreach( oNPC in this.npcs )
+        {
+            if( random( 100 ) < nChance ) oNPC.RandomAction();
+        }
+    }
+}
+
+
+[$.save.user]
+[$.lib.user.user]
+
+[$.lib.daemon.login]
+-> $.lib.basic.daemon
+
+mudPort = 7001;
+randomColours = [ "#r", "#g", "#b", "#c", "#m", "#o", "#R", "#G", "#B", "#C" ];
+loginScreen = "      #o                           _\n      #o                          (#B+#o)#R    .,\n      #r                          :;;.,;'#R  '#r;;.#R,.'\n      #o                          |\\|  #R ';,.\n      #o                        __#o|\\|#o__     #r';',;;,, \n      #o                       (___#RQ#o___)           #R';,.,             \n      #g                  '       #W| #W|  #g'               _   \n      #g      /'\\\\ \\\\ \\\\ \\\\ \\\\/\\\\ #W|#W:#W|#g \\\\  /'\\\\ \\\\ \\\\  < \\, \n      #g     || || || || || || || #W|#W|#W|#g || || || || ||  /-|| \n      #g     || || || || || || || #W|#W|#W|#g || || || || || (( || \n      #g     \\\\,|| \\\\/\\\\ \\\\ \\\\ \\\\ #W|#W|#W|#g \\\\ \\\\,|| \\\\/\\\\  \\/\\\\ \n      #o     --#g ||#o -------------  #W|#W|#W|#o -----#g ||#o ------------\n      #g        '/`               #W|#W|#W|#g       '/`             \n      #W                          |#W|#W|             \n      #W                          |#W|#W|\n      #W                          |#W|#W|\n      #W                          :#W|#W;\n      #W                           :#n\n\n     http://quintiqua.dark-rune.com, quintiqua.dark-rune.com:7000 \n";
+passwdScreen = "Many millenia ago, the ancients roamed the world under the care of the\ntwin elder gods. After the great cataclysm new races emerged and lived\nin peace and war for millenia more. Now the winds of change are upon\nthe land once more...\n\nQuintiqua, a realm of dreams and nightmares. Where light and dark battle\neternally for supremacy, and mere mortals are caught in conflicts between\nthe great powers.\n";
+newuserScreen = "Many millenia ago, the ancients roamed the world under the care of the\ntwin elder gods. After the great cataclysm new races emerged and lived\nin peace and war for millenia more. Now the winds of change are upon\nthe land once more...\n\nQuintiqua, a realm of dreams and nightmares. Where light and dark battle\neternally for supremacy, and mere mortals are caught in conflicts between\nthe great powers.\n\nWelcome to Quintiqua, a Multi User Dimension. While here, you can learn\nthe art of magic, join a guild, go raiding with the Org, search the ancient\ncities of the Acillia or just relax in a tavern with friends. The world\nis open for you.\n\n#OQuintiqua is currently still under development, so we still can't really\naccomodate players. However, once the world is complete, we look forward\nto seeing you. If you wish to lend a hand creating the world, talk to the\nnearest admin.#n\n";
+generalNews = "#YGeneral News#n\n\nQuintiqua is currently still under development, so we still can't really\naccomodate players. However, once the world is complete, we look forward\nto seeing you. If you wish to lend a hand creating the world, talk to the\nnearest admin.\n";
+creatorNews = "#RImmortals News:#n\n\nHiya all,\n\nJust letting you know, we have not fallen of the face of the\nearth. Quintiqua will not be closing as some have suggested.\nWe -are- in a bit of a lul at the moment as our main developers\nhave RL work commitments that are keeping them busy. Hopefully\nthings will be back to normal soon, In the mean time, Ill do \nmy best to provide assistance and add to the lib as is required.\nIf anyone knows any -good- LPC programmers who are free to work\nhere on getting the last few peices of functionality completed,\nlet me know, they will need to take the time to learn how this\nlib works, we wont have hacked on code.\n\nBest wishes -#gRaide#n @dark-rune.com\n";
+adminNews = "#RAdministrator News#n\n\nThere is something peculiar about this broadcast.\n";
+userList = $.save.user;
+newUser = $.lib.user.user;
+onLineList = [];
+listenPort = null;
+
+Startup()
+{
+    // Clear the on-line user list
+    this.onLineList = [];
+
+    // Kill the old main thread
+    if( this.mainThread )
+    {
+        kill_thread( this.mainThread );
+        this.mainThread = null;
+    }
+
+    // Open a server port
+    this.listenPort = listen( this.mudPort );
+
+    // Start the main thread
+    this.mainThread = thread this.Main();
+
+    console( "--> Accepting connections on port " + this.mudPort );
+}
+
+Reset()
+{
+    // Re-open the server port if it has been closed
+    if( !this.listenPort )
+    {
+        console( "--> Main server port has been closed" );
+
+        // Open a server port
+        this.listenPort = listen( this.mudPort );
+
+        console( "--> Accepting connections on port " + this.mudPort );
+    }
+
+    // Restart the main thread if stopped
+    if( !this.mainThread ) this.mainThread = thread this.Main();
+}
+
+Main()
+{
+    // Listen for incoming connections forever
+    repeat
+    {
+        try
+        {
+            // Accept a connection
+            ptConn = accept( this.listenPort );
+        }
+        catch( err )
+        {
+            console( "--> Failed to accept connection on server port" );
+
+            // Reset the daemon
+            this.listenPort = null;
+            this.Reset();
+
+            console( "--> Successfully reset the login daemon" );
+
+            continue;
+        }
+
+        try
+        {
+            // Spawn a login thread to handle the connection
+            write_text( ptConn, version() + " running " + this.mudName + " " + this.mudVersion + "\n" );
+            thread this.Login( ptConn );
+        }
+    }
+}
+
+Users()
+{
+    // Remove any disconnected users from the list
+    foreach( oUser in this.onLineList )
+    {
+        //if( !oUser.IsConnected() ) oUser.DropConnection();
+    }
+
+    return this.onLineList;
+}
+
+LoginUser( oUser )
+{
+    // Add the user to the on-line list
+    this.onLineList += [ oUser ];
+}
+
+LogoutUser( oUser )
+{
+    // Remove the oCaller from the on-line users list
+    // Don't send any messages from here!
+    this.onLineList -= [ oUser ];
+}
+
+UserList()
+{
+    // Build a comma-seperated list of users on-line
+    arUsers = this.Users();
+    nLast = sizeof(arUsers) - 1;
+    if( nLast < 0 ) return "(none)";
+    if( nLast == 0 ) return arUsers[0].Name() + ".";
+    result = arUsers[0].Name();
+    for( i = 1; i < nLast; i += 1 )
+    {
+        result += ", " + arUsers[i].Name();
+    }
+    return result + " and " + arUsers[nLast].Name() + ".";
+}
+
+FindUser( sName )
+{
+    if( length( sName ) < 1 ) return null;
+    sName = lower_case( sName );
+    nLen = length(sName) - 1;
+
+    foreach( oUser in this.Users() )
+    {
+        sUsername = oUser.username;
+        if( sUsername[0..nLen] == sName ) return oUser;
+    }
+
+    return null;
+}
+
+Broadcast( sMessage )
+{
+    // Send a sMessage to all on-line users
+    foreach( oUser in this.Users() )
+    {
+        oUser.Message( sMessage );
+    }
+}
+
+Inform( sMessage )
+{
+    // Send an inform event to all on-line users
+    this.Broadcast( "[" + sMessage + "]" );
+}
+
+UserLocations()
+{
+    // Return a list of user locations without duplicates
+    result = new mapping;
+    foreach( user in this.Users() ) result[user.location] = 1;
+    return keys( result );
+}
+
+GetNews( oCaller )
+{
+    sNews = "\n";
+
+    if( oCaller.admin ) sNews += this.adminNews + "\n";
+    if( oCaller.creator ) sNews += this.creatorNews + "\n";
+    sNews += this.generalNews + "\n";
+
+    return sNews;
+}
+
+RequestOption( ptSocket, sPrompt, arOptions, sError )
+{
+    repeat
+    {
+        // Display the prompt and read a line
+        write_text( ptSocket, sPrompt );
+        sLine = lower_case( trim( read_line( ptSocket ) ) );
+        if( sLine == "" ) continue;
+
+        // Check if the input matches an option
+        foreach( sOption in arOptions )
+        {
+            if( sLine == sOption )
+            {
+                write_text( ptSocket, "\n");
+                return sOption;
+            }
+        }
+
+        // Display the error
+        if( sError ) write_text( ptSocket, sError );
+    }
+}
+
+RequestLine( ptSocket, sPrompt )
+{
+    repeat
+    {
+        // Display the prompt and read a line
+        write_text( ptSocket, sPrompt );
+        sLine = trim( read_line( ptSocket ) );
+        if( sLine == "" ) continue;
+        return sLine;
+    }
+}
+
+Login( ptSocket )
+{
+    try
+    {
+        // Build the title screen
+        sTitle = this.loginScreen;
+        //sRandom = this.randomColours[random(sizeof(this.randomColours))];
+        //sTitle = replace( sTitle, "#?", sRandom );
+
+        // Add the online status bar
+        nUsers = sizeof(this.Users());
+        if( nUsers == 1 ) sInfo = "1 user online, up for ";
+        else sInfo = to_string(nUsers) + " users online, up for ";
+        //sInfo += format_time( uptime(), 2 ) + ".";
+        sInfo += "some time.";
+        //sTitle += center( sInfo, 70 ) + "\n\n";
+        sTitle += "                  " + sInfo + "\n\n";
+
+        sTitle = this.terminalDaemon.ResolveColour( sTitle + "#n", "ansi" );
+        write_text( ptSocket, sTitle );
+
+        repeat
+        {
+            // Display the login prompt
+            write_text( ptSocket, "Who would you like to be today? " );
+
+            sName = trim( read_line( ptSocket ) );
+            if( length( sName ) < 1 )
+            {
+                write_text( ptSocket, "\nYou must enter your name in order to log in.\n"
+                  "Type 'q' to disconnect.\n" );
+                continue;
+            }
+
+            sUsername = lower_case( sName );
+            if( sUsername == "q" || sUsername == "quit" )
+            {
+                write_text( ptSocket, "\nDisconnecting...\n\n" );
+                close( ptSocket );
+                exit;
+            }
+
+            if( sUsername == "u" || sUsername == "w" )
+            {
+                // Display a list of users
+                arUsers = this.Users();
+                if( sizeof(arUsers ) == 0 )
+                {
+                    write_text( ptSocket, "\nThere are no players logged on.\n\n" );
+                    continue;
+                }
+                else if( sizeof( arUsers ) == 1 )
+                {
+                    write_text( ptSocket, "\nThere is a single player on " + this.mudName + ":\n" );
+                }
+                else
+                {
+                    write_text( ptSocket, "\nThere are " + sizeof( arUsers ) + " players on " +
+                      this.mudName + ":\n" );
+                }
+                write_text( ptSocket, this.UserList() + "\n\n" );
+                continue;
+            }
+
+            if( length(sUsername) < 2 )
+            {
+                write_text( ptSocket, "\nUnknown login command. Enter 'q', 'u' or your player name.\n"
+                  "Note that player names must be at least two letters long.\n\n" );
+                  continue;
+            }
+
+            // Check if the user exists
+            if( exists( this.userList, sUsername ) )
+            {
+                // Log in an existing user
+                oUser = this.userList[sUsername];
+
+                // Display the password screen
+                sTitle = "\n" + this.passwdScreen + "\n";
+                sTitle = this.terminalDaemon.ResolveColour( sTitle + "#n", "ansi" );
+                write_text( ptSocket, sTitle );
+
+                for( i = 0; i < 3; i += 1 )
+                {
+                    write_text( ptSocket, "Enter your password (press ENTER to cancel): " );
+                    sPass = trim( read_line( ptSocket ) );
+                    if( sPass == "" )
+                    {
+                        if( i )
+                        {
+                            write_text( ptSocket, "\nWell, you had your chance. "
+                              "Can't do any more than that.\n\n" );
+                            close( ptSocket );
+                            exit;
+                        }
+                        else
+                        {
+                            write_text( ptSocket, "\nLogin cancelled, about to redo from start.\n\n" );
+                            i = -1;
+                            break;
+                        }
+                    }
+
+                    // Attempt to log the user in
+                    if( oUser.Login( ptSocket, sPass ) )
+                    {
+                        // Add the user to the on-line list
+                        this.LoginUser( oUser );
+                        exit;
+                    }
+
+                    if( i < 2 )
+                        write_text( ptSocket, "\nAha! That password is not correct. Pick again.\n\n" );
+                }
+
+                if( i == -1 ) continue;
+
+                write_text( ptSocket, "\nOops, too many attempts - try again later.\n\n" );
+                close( ptSocket );
+                exit;
+            }
+
+            // User not found
+            write_text( ptSocket, "\nYou do not appear to exist, sorry.\n\n" );
+            sCreate = this.RequestOption( ptSocket, "Would you like to create '" +
+              sName + "' (y/n)? ", [ "y", "n" ] );
+            if( sCreate == "n" ) continue;
+
+            this.CreateUser( ptSocket, sUsername, sName );
+        }
+    }
+    catch( err )
+    {
+        write_text( ptSocket, "\nOops, something has gone horribly wrong.\n" );
+        write_text( ptSocket, this.DescribeError( err ) );
+        close( ptSocket );
+    }
+}
+
+CreateUser( ptSocket, sUsername, sName )
+{
+    // Display the new user screen
+    sTitle = "\n" + this.newuserScreen + "\n";
+    sTitle = this.terminalDaemon.ResolveColour( sTitle + "#n", "ansi" );
+    write_text( ptSocket, sTitle );
+
+    // Ask for (and confirm) the new password
+    repeat
+    {
+        write_text( ptSocket, "Enter a password of at least 5 letters (not hidden!): " );
+        sPass = trim( read_line( ptSocket ) );
+        if( sPass == "" || length( sPass ) >= 5 ) break;
+
+        write_text( ptSocket, "\nYour password must be at least 5 letters in length.\n\n" );
+    }
+    if( sPass == "" )
+    {
+        write_text( ptSocket, "\n" );
+        return 0;
+    }
+    write_text( ptSocket, "Please confirm your password: " );
+    sPass2 = trim( read_line( ptSocket ) );
+    if( sPass != sPass2 )
+    {
+        write_text( ptSocket, "\nYour passwords do not match. Try again.\n\n" );
+        return 0;
+    }
+
+    // Ask for a gender
+    write_text( ptSocket, "\n" );
+    sGender = this.RequestOption( ptSocket, "Please choose your character's gender (m/f): ",
+      [ "m", "f" ], "\nYou must select a gender for your new character.\n"
+      "The valid genders on " + this.mudName + " are (m)ale and (f)emale.\n" );
+    if( sGender == "f" ) sGender = "female"; else sGender = "male";
+
+    // Ask for the user's display name
+    write_text( ptSocket, "Please specify the capitalisation for your name. You may use any mix of\n"
+      "upper and lower case, provided the name remains the same.\n" );
+    repeat
+    {
+        write_text( ptSocket, "Enter your displayed name [" + sName + "]: " );
+        sNewName = trim( read_line( ptSocket ) );
+        if( sNewName == "" ) sNewName = sName;
+        if( lower_case( sNewName ) == sUsername ) break;
+
+        write_text( ptSocket, "\nThe name you entered does not appear to match your "
+          "character's name.\nPlease try again.\n" );
+    }
+
+    // Ask for the user's email address
+    write_text( ptSocket, "\nFor security reasons, " + this.mudName + " requires a valid "
+      "email address.\nYou can hide your address from other players by preceeding "
+      "it with\na '#' character (e.g. #user@somewhere.com).\n" );
+    repeat
+    {
+        sEmail = this.RequestLine( ptSocket, "Enter your email address: " );
+        if( search( sEmail, "@" ) > 0 ) break;
+
+        write_text( ptSocket, "\nThat is not a valid email address.\n" );
+    }
+
+    // Ask for the user's real name
+    write_text( ptSocket, "\nIf you do not mind, please enter your real name.\n"
+      "Note that this information will be visible to other players.\n" );
+    write_text( ptSocket, "Please enter your real name (optional): " );
+    sRealName = trim( read_line( ptSocket ) );
+
+    // Create the new user
+    write_text( ptSocket, "\r\Creating character...\n\n");
+    oUser = new object( sUsername, this.userList );
+    add_inherit( oUser, this.newUser );
+    oUser.username = sUsername;
+    oUser.password = crypt( sPass );
+    oUser.id = sUsername;
+    oUser.name = sNewName;
+    oUser.gender = sGender;
+    oUser.email = sEmail;
+    oUser.realName = sRealName;
+
+    // Now log the new user in
+    if( oUser.Login( ptSocket, sPass ) )
+    {
+        // Add the user to the on-line list
+        this.LoginUser( oUser );
+    }
+    else
+    {
+        write_text( ptSocket, "\nOops something went wrong.\n\n" );
+        close( ptSocket );
+    }
+    exit;
+}
+
+
+
+[$.lib.basic.logger]
+-> $.lib.global
+
+Log( sText )
+{
+    console( "[log] " + sText );
+}
+
+LogError( arErr, sText )
+{
+    console( "[log] " + sText );
+}
+
+[save.log.master]
+-> $.lib.basic.logger
+
+
+
+[$.lib.basic.object]
+-> $.lib.global
+
+id = "thing,"
+idplural = "things,"
+idadj = ""
+name = "thing"
+plural = "things"
+unique = 0
+desc = "This is the stuff from which all is made."
+desc2 = null
+mass = 100
+actions = []
+location = null
+wander = 0
+living = 0
+visible = 1
+noclone = 1
+worn = 0
+radiant = 0
+ambient = 0
+value = 0
+container = 0
+keyname = null
+
+
+Name()
+{
+    return this.name;
+}
+
+AName( oAgent, bColour )
+{
+    sName = this.Name();
+    sFirst = sName[0..0];
+    
+    if( bColour ) sName = "#Y" + sName + "#n";
+    if( this.unique ) return "the " + sName;
+    if( upper_case(sFirst) == sFirst ) return sName;
+
+    if( search( "aeiouAEIOU", sFirst ) >= 0 ) return "an " + sName;
+
+    return "a " + sName;
+}
+
+TheName( oAgent, bColour )
+{
+    sName = this.Name();
+    sFirst = sName[0..0];
+    
+    if( bColour ) sName = "#Y" + sName + "#n";
+    if( this.unique ) return "the " + sName;
+    if( upper_case(sFirst) == sFirst ) return sName;
+    
+    if( this.location && this.location.TestPresent( this.name, this ) )
+    {
+        sName = this.Plural();
+        if( bColour ) sName = "#Y" + sName + "#n";
+        return "one of the " + sName;
+    }
+    
+    return "the " + sName;
+}
+
+Plural()
+{
+    if( this.plural ) return this.plural;
+    sName = this.Name();
+    if( sName[-1..-1] == "s" ) return sName + "es";
+    return sName + "s";
+}
+
+Short( oAgent )
+{
+    return this.Name( oAgent, 1 );
+}
+
+Describe()
+{
+    // Use desc2 to simplify base and derived room descriptions
+    if( this.desc2 ) return this.desc + " " + this.desc2;
+    return this.desc;
+}
+
+Light( nAmbient )
+{
+    return this.radiant;
+}
+
+TotalMass()
+{
+    return this.mass;
+}
+
+ContentMass()
+{
+    return 0;
+}
+
+Value()
+{
+    return this.value;
+}
+
+Visible( oAgent )
+{
+    if( !this.visible ) return 0;
+    return 1;
+}
+
+Move( oLocation, sLeave, sArrive, oAgent, mContext )
+{
+    // This might go into the living object..
+    if( oLocation && !functionp(oLocation.AddObject) ) return "Not a room.";
+
+    if( !stringp(sLeave) ) sLeave = this.TheName() + " leaves.";
+    if( !stringp(sArrive) ) sArrive = this.AName() + " arrives.";
+
+    // Move out of the old location (if a valid room)
+    oOldLoc = this.location;
+    if( oOldLoc && functionp(oOldLoc.RemoveObject) )
+    {
+        oOldLoc.RemoveObject( this );
+        oOldLoc.Broadcast( "#W" + capitalise(sLeave), oAgent );
+    }
+
+    // Store the new location reference
+    this.location = oLocation;
+
+    // Move into the new location
+    if( oLocation )
+    {
+        oLocation.Broadcast( "#W" + capitalise(sArrive), oAgent );
+        oLocation.AddObject( this );
+    }
+
+    // If a user, look around the new location
+    if( oLocation && functionp(this.Look) ) this.Look();
+
+    return 1;
+}
+
+RandomAction()
+{
+    // Check if this object can wander
+    if( this.wander )
+    {
+        // Wander a third of the time
+        if( !random(3) ) return this.MoveRandom();
+    }
+
+    // Select an action at random
+    arActionList = this.actions;
+    nLen = sizeof( arActionList );
+    if( nLen )
+    {
+        sAction = arActionList[ random(nLen) ];
+        if( sAction ) this.Action( sAction );
+    }
+}
+
+Action( sAction )
+{
+    switch( sAction[0..0] )
+    {
+        case "'":
+            return this.Say( sAction[1..] );
+
+        case ":":
+            return this.Emote( sAction[1..] );
+
+        case "^":
+            this.Perform( "#g" + sAction[1..] );
+            break;
+            
+        case "@":
+            this.Perform( "#o" + sAction[1..] );
+            break;
+
+        default:
+            this.location.Broadcast( sAction, this );
+    }
+}
+
+Say( sText )
+{
+    sMessage = "#c" + capitalise(this.TheName()) + " says:#n " + sText;
+    this.location.Broadcast( sMessage, this );
+}
+
+Emote( sText )
+{
+    sMessage = "#g" + capitalise(this.TheName()) + " " + sText;
+    this.location.Broadcast( sMessage, this );
+}
+
+Perform( sText )
+{
+    sMessage = capitalise(this.TheName()) + " " + sText;
+    this.location.Broadcast( sMessage, this );
+}
+
+Clone( oAgent )
+{
+    if( this.noclone ) return null;
+    return new object( this );
+}
+
+TestKey( sKey, oLock, oAgent )
+{
+    if( !this.keyname || this.keyname != sKey )
+        return this.TheName() + " does not fit in the lock.";
+
+    return 1;
+}
+
+UseKey( sKey, oLock, oAgent )
+{
+    // react to being used in a lock
+}
+
+
+
+[$.lib.basic.item]
+-> $.lib.basic.object
+
+noget = null;
+nodrop = null;
+noclone = 0;
+
+Get( oAgent )
+{
+    if( this.noget )
+    {
+        if( functionp(this.noget) ) return this.noget( oAgent );
+        if( stringp(this.noget) ) return this.noget;
+        return 0;
+    }
+
+    return 1;
+}
+
+Drop( oAgent )
+{
+    if( this.nodrop )
+    {
+        if( functionp(this.nodrop) ) return this.nodrop( oAgent );
+        if( stringp(this.nodrop) ) return this.nodrop;
+        return 0;
+    }
+
+    return 1;
+}
+
+Put( oContain, oAgent )
+{
+    if( this.nodrop )
+    {
+        if( functionp(this.nodrop) ) return this.nodrop( oContain, oAgent );
+        if( stringp(this.nodrop) ) return this.nodrop;
+        return 0;
+    }
+
+    return 1;
+}
+
+
+
+
+[$.lib.basic.container]
+-> $.lib.basic.item
+
+container = 1
+capacity = 0
+tolerance = 0
+contents = []
+closed = 0
+locked = 0
+key = null
+noopen = 1
+noclose = 1
+nolock = 1
+nounlock = 1
+opacity = 1
+
+ListContents( oAgent )
+{
+    sResult = "";
+
+    if( this.closed ) sResult += this.TheName() + " is closed.\n";
+    if( this.opacity > 0.5 ) return sResult;
+
+    // Build the array of visible items
+    arContents = this.contents;
+    arItems = [];
+    arLiving = [];
+    foreach( oThing in arContents )
+    {
+        if( oThing != oAgent && oThing.visible )
+        {
+            if( oThing.living ) arLiving += [ oThing ];
+            else arItems += [ oThing ];
+        }
+    }
+
+    nRemain = nSize = sizeof(arLiving);
+    if( nSize )
+    {
+        foreach( oThing in arLiving )
+        {
+            sResult += capitalise(oThing.Short()) + " is standing here.\n";
+            nRemain -= 1;
+        }
+        sResult = sResult[0..-2]; // strip last newline
+    }
+
+    nSize = sizeof(arItems);
+    if( nSize )
+    {
+        sList = this.ListMultipleShort( arItems, oAgent );
+        if( length(sList) ) sResult += "\n\n" + capitalise(sList);
+    }
+
+    return sResult;
+}
+
+Broadcast( sMessage, oAgent, mContext )
+{
+    foreach( oThing in this.contents )
+    {
+        if( oThing == oAgent ) continue;
+        if( functionp(oThing.Message) ) oThing.Message( sMessage, oAgent, mContext );
+    }
+}
+
+AddObject( oThing )
+{
+    // Create a 'contents' array if this object doesn't have one
+    if( exists( this, "contents" ) ) this.contents += [ oThing ];
+    else this.contents = [ oThing ];
+}
+
+RemoveObject( oThing )
+{
+    this.contents -= [ oThing ];
+}
+
+TestInsert( oThing, oAgent )
+{
+    if( this.closed ) return this.TheName() + " is closed.";
+    
+    if( numberp(this.capacity) )
+    {
+        // Check if capacity will be exceeded
+        if( this.ContentMass() + oThing.TotalMass() > this.capacity + this.tolerance )
+            return oThing.TheName() + " will not fit in " + this.TheName() + ".";
+    }
+    
+    return 1;
+}
+
+TestRemove( oThing, oAgent )
+{
+    if( this.closed ) return this.TheName() + " is closed.";
+
+    return 1;
+}
+
+CheckCapacity()
+{
+    // Check if contents are over capacity
+    nOver = this.ContentMass() - this.capacity;
+    if( nOver > 0 )
+    {
+        // Return chance of losing an item (0->1)
+        return nOver / this.tolerance;
+    }
+    return 0;
+}
+
+TestPresent( sName, oIgnore )
+{
+    // Locate an object by exact id
+    arContents = this.contents;
+    foreach( oThing in arContents )
+    {
+        if( oThing == oIgnore ) continue;
+        if( oThing.name == sName ) return oThing;
+    }
+    return null;
+}
+
+Present( sName, oIgnore, oAgent )
+{
+    // Locate an object by full or partial noun (id)
+
+    oMatch = null;
+    sName = lower_case(sName);
+    pAdjs = split( sName, " " );
+    sNoun = pAdjs[-1];
+    pAdjs = pAdjs[0..-2];
+    sWholeNoun = sNoun + ",";
+
+    // Find the first exact match
+    arContents = this.contents;
+    foreach( oThing in arContents )
+    {
+        if( oThing == oIgnore ) continue;
+        
+        if( search( oThing.idplural, sWholeNoun ) >= 0 )
+        {
+            // Found a plural match
+            oMatch = oThing;
+        }
+        else if( search( oThing.id, sWholeNoun ) >= 0 )
+        {
+            // Found an exact match
+            oMatch = oThing;
+        }
+        
+        if( oMatch )
+        {
+            // Check that all adjectives also match
+            sThisAdjs = oThing.idadj;
+            foreach( sAdj in pAdjs )
+            {
+                if( search( sThisAdjs, sAdj ) < 0 )
+                {
+                    // At least one does not match
+                    oMatch = null;
+                    break;
+                }
+            }
+            
+            if( oMatch ) break; // success
+        }
+    }
+    
+    // If no match yet, find the first partial match
+    if( !oMatch )
+    {
+        foreach( oThing in arContents )
+        {
+            if( oThing == oIgnore ) continue;
+            
+            if( search( oThing.id, sNoun ) >= 0 )
+            {
+                // Found a partial match
+                oMatch = oThing;
+            }
+
+            if( oMatch )
+            {
+                // Check that all adjectives also match
+                sThisAdjs = oThing.idadj;
+                foreach( sAdj in pAdjs )
+                {
+                    if( search( sThisAdjs, sAdj ) < 0 )
+                    {
+                        // At least one does not match
+                        oMatch = null;
+                        break;
+                    }
+                }
+                
+                if( oMatch ) break; // success
+            }
+        }
+    }
+
+    return oMatch;
+}
+
+FindMatch( sName, oIgnore, oAgent )
+{
+    if( this.closed && this.opacity > 0.5 )
+        return "You cannot see inside " + this.TheName() + ".";
+
+    return this.Present( sName, oIgnore, oAgent );
+}
+
+Light( nAmbient )
+{
+    nRadiant = this.radiant;
+    nOpacity = this.opacity;
+
+    if( nOpacity > 0.99 )
+    {
+        if( nRadiant < 1 ) return 0;
+        nLum = (nRadiant * 10) / nAmbient;
+        if( nLum > nRadiant ) return nRadiant;
+        return nLum;
+    }
+
+    arContents = this.contents;
+    foreach( oThing in arContents )
+    {
+        nRadiant += oThing.Light( nAmbient );
+    }
+    
+    if( nAmbient > 0 )
+    {
+        nLum = (nRadiant * 10) / nAmbient;
+        if( nLum <= nRadiant ) nRadiant = nLum;
+    }
+    
+    return nRadiant * (1.0 - nOpacity);
+}
+
+ContentMass()
+{
+    nMass = 0;
+    arContents = this.contents;
+    foreach( oThing in arContents )
+    {
+        nMass += oThing.TotalMass();
+    }
+    return nMass;
+}
+
+TotalMass()
+{
+    return this.mass + this.ContentMass();
+}
+
+Open()
+{
+    this.closed = 0;
+}
+
+Close()
+{
+    this.closed = 1;
+}
+
+TestOpen( oAgent )
+{
+    if( this.noopen )
+    {
+        if( functionp(this.noopen) ) return this.noopen();
+        if( stringp(this.noopen) ) return this.noopen;
+        return 0;
+    }
+    
+    if( !this.closed ) return this.TheName() + " is already open.";
+    
+    return 1;
+}
+
+TestClose( oAgent )
+{
+    if( this.noclose )
+    {
+        if( functionp(this.noclose) ) return this.noclose();
+        if( stringp(this.noclose) ) return this.noclose;
+        return 0;
+    }
+    
+    if( this.closed ) return this.TheName() + " is already closed.";
+    
+    return 1;
+}
+
+Lock( oKey, oAgent )
+{
+    oKey.UseKey( this.key, 1, this, oAgent ); // 1 = lock
+    this.locked = 1;
+}
+
+Unlock( oKey, oAgent )
+{
+    oKey.UseKey( this.key, 0, this, oAgent ); // 0 = unlock
+    this.locked = 0;
+}
+
+TestLock( oKey, oAgent )
+{
+    if( this.nolock )
+    {
+        if( functionp(this.nolock) ) return this.nolock();
+        if( stringp(this.nolock) ) return this.nolock;
+        return 0;
+    }
+    
+    if( !this.key ) return "There is no lock on " + this.TheName() + ".";
+    
+    mResult = oKey.TestKey( this.key, 1, this, oAgent ); // 1 = lock
+    if( mResult != 1 ) return mResult;
+        
+    if( this.locked ) return this.TheName() + " is already locked.";
+        
+    return 1;
+}
+
+TestUnlock( oKey, oAgent )
+{
+    if( this.nounlock )
+    {
+        if( functionp(this.nounlock) ) return this.nounlock();
+        if( stringp(this.nounlock) ) return this.nounlock;
+        return 0;
+    }
+
+    if( !this.key ) return "There is no lock on " + this.TheName() + ".";
+    
+    mResult = oKey.TestKey( this.key, 0, this, oAgent ); // 0 = unlock
+    if( mResult != 1 ) return mResult;
+        
+    if( !this.locked ) return this.TheName() + " is already unlocked.";
+    
+    return 1;
+}
+
+
+
+[$.lib.basic.room]
+-> $.lib.basic.container
+
+capacity = null
+opacity = 0
+name = "Nowhere"
+desc = "The fragmented, colourless lack of stuff swirls mindlessly as you attempt to focus on the nothingness."
+exits = []
+items = []
+items2 = []
+noget = 1
+nodrop = 1
+noclone = 1
+
+Describe( oIgnore )
+{
+    // Get the room description
+    // Use desc2 to simplify base and derived room descriptions
+    if( this.desc2 ) sResult = this.desc + " " + this.desc2;
+    else sResult = this.desc;
+    sResult += "\n";
+
+    /*
+    sResult = sResult + "\n#BObvious exits:#n ";
+    arExitList = this.exits;
+    if( sizeof(arExitList) )
+    {
+        foreach( arExit in arExitList )
+        {
+            sResult = sResult + arExit[0] + ", ";
+        }
+        sResult = sResult[0..-3];
+    }
+    else sResult = sResult + "none";
+    sResult = sResult + ".";
+    */
+
+    // Add the list of players and items
+    sThings = this.ListContents( oIgnore );
+    if( length(sThings) > 0 ) sResult = sResult + "\n" + sThings + "\n";
+
+    return sResult;
+}
+
+GetExitSummary()
+{
+    sResult = "";
+
+    foreach( arExit in this.exits )
+    {
+        switch( arExit[0] )
+        {
+        case "north": sResult += "N"; break;
+        case "south": sResult += "S"; break;
+        case "east": sResult += "E"; break;
+        case "west": sResult += "W"; break;
+        case "up": sResult += "U"; break;
+        case "down": sResult += "D"; break;
+        }
+    }
+
+    if( sResult == "" ) return "none";
+    return sResult;
+}
+
+Action( sAction )
+{
+    switch( sAction[0..0] )
+    {
+        case "^":
+            // Broadcast a smell action
+            this.Broadcast( "#g" + sAction[1..] );
+            break;
+            
+        case "@":
+            // Broadcast a sound action
+            this.Broadcast( "#o" + sAction[1..] );
+            break;
+        
+        case ":":
+            // Broadcast an action
+            this.Broadcast( sAction[1..] );
+            
+        default:
+            this.Broadcast( sAction );
+    }
+}
+
+LookItem( sName )
+{
+    // Locate a room item by full or partial noun (id)
+
+    sMatch = null;
+    sName = lower_case(sName);
+    
+    pAdjs = split( sName, " " );
+    sNoun = pAdjs[-1];
+    pAdjs = pAdjs[0..-2];
+    sWholeNoun = sNoun + ",";
+
+    arItems = this.items;
+    if( this.items2 ) arItems += this.items2;
+
+    // Find the first exact match
+    foreach( arInfo in arItems )
+    {
+        if( search( arInfo[1], sWholeNoun ) >= 0 )
+        {
+            // Found a plural match
+            sMatch = arInfo[4];
+        }
+        else if( search( arInfo[0], sWholeNoun ) >= 0 )
+        {
+            // Found an exact match
+            sMatch = arInfo[4];
+        }
+        
+        if( sMatch )
+        {
+            // Check that all adjectives also match
+            sThisAdjs = arInfo[2];
+            foreach( sAdj in pAdjs )
+            {
+                if( search( sThisAdjs, sAdj ) < 0 )
+                {
+                    // At least one does not match
+                    sMatch = null;
+                    break;
+                }
+            }
+            
+            if( sMatch ) break; // success
+        }
+    }
+    
+    // If no match yet, find the first partial match
+    if( !sMatch )
+    {
+        foreach( arInfo in arItems )
+        {
+            if( search( arInfo[0], sNoun ) >= 0 )
+            {
+                // Found a partial match
+                sMatch = arInfo[4];
+            }
+
+            if( sMatch )
+            {
+                // Check that all adjectives also match
+                sThisAdjs = arInfo[2];
+                foreach( sAdj in pAdjs )
+                {
+                    if( search( sThisAdjs, sAdj ) < 0 )
+                    {
+                        // At least one does not match
+                        sMatch = null;
+                        break;
+                    }
+                }
+
+                if( sMatch ) break; // success
+            }
+        }
+    }
+
+    return sMatch;
+}
+
+
+[$.lib.basic.living]
+-> $.lib.basic.container
+
+gender = null
+race = null
+class = null
+living = 1
+noget = 1
+nodrop = 1
+tolerance = 0.1
+followers = null
+
+Name()
+{
+    return this.name;
+}
+
+Short( oAgent )
+{
+    sResult = this.AName( oAgent, 1 );
+
+    if( this.gender || this.race || this.class )
+    {
+        sResult += ", a";
+        if( this.gender ) sResult += " " + this.gender;
+        if( this.race ) sResult += " " + this.race;
+        if( this.class ) sResult += " " + this.class;
+    }
+
+    return sResult;
+}
+
+FollowExit( sVerb )
+{
+    // Check for an exit direction
+    oHere = this.location;
+    arExitList = oHere.exits;
+    foreach( arExit in arExitList )
+    {
+        if( sVerb == arExit[0] )
+        {
+            // Build the user's messages
+            sDir = arExit[0];
+            sLeave = this.TheName() + " leaves " + sDir + ".";
+            if( stringp(this.oppositeExit[sDir]) )
+                sArrive = this.AName() + " arrives from " + this.oppositeExit[sDir] + ".";
+            else sArrive = this.AName() + " arrives.";
+
+            // Move to the new location
+            oTo = arExit[1];
+            mResult = this.Move( oTo, sLeave, sArrive, this );
+            if( mResult == 1 )
+            {
+                if( sizeof(arFollow = this.followers) )
+                {
+                    foreach( oShadow in arFollow )
+                    {
+                        if( !oShadow.AttemptFollow( this, sDir, oHere, oTo ) )
+                        {
+                            // this.followers -= [ oShadow ];
+                        }
+                    }
+                }
+            }
+            
+            return mResult;
+        }
+    }
+    
+    return null;
+}
+
+AttemptFollow( oTarget, sDir, oFrom, oTo )
+{
+    if( this.location != oFrom ) return 0;
+    
+    mFollow = this.FollowExit( sDir );
+    if( mFollow == 1 )
+    {
+        this.Message( "#WYou follow " + oTarget.TheName() + " " + sDir + "." );
+        return 1;
+    }
+    else
+    {
+        if( stringp(mFollow) ) this.Message( mFollow );
+        this.Message( "#W" + capitalise(oTarget.TheName()) + " leaves you behind!" );
+        return 0;
+    }
+}
+
+AddFollower( oThing )
+{
+    // Create a 'follower' array if this object doesn't have one
+    if( exists( this, "followers" ) ) this.followers += [ oThing ];
+    else this.followers = [ oThing ];
+}
+
+RemoveFollower( oThing )
+{
+    this.followers -= [ oThing ];
+}
+
+TestFollow( oThing, oAgent )
+{
+    return 1;
+}
+
+IsFollowing( oThing, oAgent )
+{
+    //return (this.followers && search( this.followers, oThing ) != -1);
+    if( this.followers ) foreach( o in this.followers ) if( o == oThing ) return 1;
+    return 0;
+}
+
+MoveRandom()
+{
+    // Pick an exit at random and follow it
+    if( !this.location ) return;
+    arExitList = this.location.exits;
+    nLen = sizeof(arExitList);
+    if( nLen )
+    {
+        arExit = arExitList[ random(nLen) ];
+        return this.FollowExit( arExit[0] );
+    }
+}
+
+[$.lib.basic.npc]
+-> $.lib.basic.living
+
+
+
+
+
+[$.lib.basic.command]
+-> $.lib.global
+
+
+
+[$.lib.room.void]
+-> $.lib.basic.room
+
+id = "void,";
+name = "The Void";
+desc = "This is the void. There is nothing here. Well, there shouldn't be anything here. Including you.";
+
+
+
+
+
+
+
+
+
+[$.lib.cmd.user]
+[$.area.campus.entrance]
+
+[$.lib.user.user]
+-> $.lib.basic.living
+
+username = "-";
+name = "-";
+password = null;
+cols = 79;
+rows = 24;
+term = "ansi";
+cwd = $;
+commands = $.lib.cmd.user;
+location = null;
+loginSocket = null;
+loginThread = null;
+creator = 0;
+admin = 0;
+startLocation = $.area.campus.entrance;
+globalAlias = [ "n" : "north", "s" : "south", "e" : "east", "w" : "west", "ne" : "northeast", "nw" : "northwest", "se" : "southeast", "sw" : "southwest", "u" : "up", "d" : "down" ];
+alias = [:];
+tellHistory = [];
+noclone = 1;
+editBuffers = null;
+hp = 50;
+en = 50;
+mv = 10;
+
+
+EditOpenBuffer( sBuffer, mText, sPath, bIsFunction )
+{
+    if( !mText ) mText = [];
+    if( !bIsFunction ) bIsFunction = 0;
+
+    // Close the editor if currently open (lose changes)
+    this.EditCloseBuffer( sBuffer );
+
+    // Validate the text buffer
+    if( stringp(mText) )
+    {
+        // Split the text into individual lines
+        mText = split( replace( mText, "\r\n", "\n" ), "\n" );
+    }
+    else if( !arrayp(mText) ) return "Text is not a string or array.";
+
+    bDirty = 0;
+
+    // Create the edit buffer
+    if( !this.editBuffers ) this.editBuffers = new mapping;
+    this.editBuffers[sBuffer] = [ mText, sPath, bIsFunction, bDirty, 1 ];
+
+    return 1;
+}
+
+EditCloseBuffer( sBuffer )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return 0;
+
+    // Delete the buffer
+    remove( this.editBuffers, sBuffer );
+    return 1;
+}
+
+EditIsOpen( sBuffer )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return 0;
+    return 1;
+}
+
+EditGetPath( sBuffer )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return null;
+    return arInfo[1]; // path
+}
+
+EditIsFunction( sBuffer )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return 0;
+    return arInfo[2]; // function flag
+}
+
+EditIsDirty( sBuffer )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return 0;
+    return arInfo[3]; // dirty flag
+}
+
+EditBufferSize( sBuffer )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return 0;
+    return length(arInfo[0]); // buffer
+}
+
+EditInsertLine( sBuffer, nLine, sText )
+{
+    // Check if the buffer is open
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return 0;
+
+    nLine -= 1; // line 1 is index 0
+
+    // Insert the new line
+    nLen = length(arInfo[0]);
+    if( nLine > 0 ) arResult = arInfo[0][0..nLine - 1] + [ sText ];
+    else arResult = [ sText ];
+    if( nLine < nLen ) arResult += arInfo[0][nLine..nLen];
+
+    arInfo[0] = arResult;
+    arInfo[3] = 1; // dirty flag
+    
+    if( nLine < 0 ) nLine = 0; else if( nLine > nLen ) nLine = nLen;
+    return nLine + 1;
+}
+
+EditRemoveLines( sBuffer, nFirst, nLast )
+{
+    // Check if the buffer is open
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) ) return 0;
+
+    nFirst -= 1; // line 1 is index 0
+    nLast -= 1;
+
+    // Remove the specified line
+    nLen = length(arInfo[0]);
+    if( nFirst > 0 )
+    {
+        arResult = arInfo[0][0..nFirst - 1];
+        if( nLast < nLen - 1 ) arResult += arInfo[0][nLast + 1..nLen];
+    }
+    else arResult = arInfo[0][nLast + 1..];
+
+    arInfo[0] = arResult;
+    arInfo[3] = 1; // dirty flag
+
+    return 1;
+}
+
+EditSave( sBuffer, sNewPath, oCaller )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) )
+        return "Buffer is not open.";
+    
+    // Check if the buffer has a path
+    if( stringp(sNewPath) ) arInfo[1] = sNewPath;
+    sPath = arInfo[1]; // path
+    if( length(sPath) )
+    {
+        // Find the target object and name
+        arTarget = this.FindPathName( sPath, oCaller.cwd );
+        if( !arTarget ) return "Not found: " + sPath;
+        oTarget = arTarget[0];
+        sName = arTarget[1];
+
+        sValue = join( arInfo[0], "\n" );
+        oTarget[sName] = sValue;
+
+        arInfo[3] = 0; // dirty flag
+        
+        return 1;
+    }
+
+    return "No path has been specified.";
+}
+
+EditCompile( sBuffer, sNewPath, oCaller )
+{
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) )
+        return "Buffer is not open.";
+    
+    // Check if the buffer has a path
+    if( stringp(sNewPath) ) arInfo[1] = sNewPath;
+    sPath = arInfo[1]; // path
+    if( sPath )
+    {
+        // Find the target object and name
+        arTarget = this.FindPathName( sPath, oCaller.cwd );
+        if( !arTarget ) return "Not found: " + sPath;
+        oTarget = arTarget[0];
+        sName = arTarget[1];
+        
+        // Attempt to compile the buffer into a function
+        sValue = join( arInfo[0], "\n" );
+        arResult = parse( sValue );
+
+        // Display any errors
+        sErrors = arResult[1];
+        if( sErrors ) oCaller.MessageNoWrap( "#C" + sErrors );
+
+        // If compiled, save the result
+        fnCompiled = arResult[0];
+        if( functionp(fnCompiled) )
+        {
+            oTarget[sName] = fnCompiled;
+
+            arInfo[3] = 0; // dirty flag
+            
+            return 1;
+        }
+
+        return "Function did not compile.";
+    }
+    
+    return "No path has been specified.";
+}
+
+EditDisplay( sBuffer, nFirst, nLast, oCaller )
+{
+    // Check if the buffer is open
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) )
+        return "Buffer is not open.";
+
+    mText = arInfo[0];
+    nLen = sizeof(mText);
+    if( nLen )
+    {
+        if( nLast > nLen ) nLast = nLen;
+        nPad = length(to_string(nLast)) + 1;
+        nCurrent = arInfo[4];
+        for( nLine = nFirst; nLine <= nLast; nLine += 1 )
+        {
+            if( nLine == nCurrent ) sNum = nLine + "*"; else sNum = nLine + " ";
+            oCaller.RawMessage( this.RepeatString( " ", nPad - length(sNum) ) +
+                sNum + mText[nLine - 1] + "\n" );
+        }
+    }
+    else oCaller.RawMessage( "Buffer is empty.\n" );
+    
+    return 1;
+}
+
+EditCommand( sBuffer, sCmd, oCaller )
+{
+    // Check if the buffer is open
+    if( !this.editBuffers || !(arInfo = this.editBuffers[sBuffer]) )
+        return "Buffer is not open.";
+        
+    if( length(sCmd) < 1 ) return 1;
+
+    // Check for a line number in the command
+    nBufferLen = sizeof(arInfo[0]);
+    nFirst = to_int(sCmd);
+    if( nFirst != null )
+    {
+        nPos = length(to_string(nFirst));
+        if( nFirst < 1 ) nFirst = 1; else if( nFirst > nBufferLen ) nFirst = nBufferLen;
+    }
+    else nPos = 0;
+    
+    // Check for a line range in the command
+    if( sCmd[nPos..nPos] == "," )
+    {
+        if( nFirst == null ) nFirst = 1; // implicit start line
+        nPos += 1;
+        if( sCmd[nPos..nPos] == "*" ) { nPos += 1; nLast = null; }
+        else nLast = to_int(sCmd[nPos..]);
+        if( nLast != null )
+        {
+            nPos += length(to_string(nLast));
+            if( nLast < nFirst ) nLast = nFirst; else if( nLast > nBufferLen ) nLast = nBufferLen;
+        }
+        else nLast = nBufferLen;
+    }
+    else
+    {
+        if( nFirst == null ) nFirst = arInfo[4]; // current line
+        if( nFirst > nBufferLen ) nFirst = nBufferLen;
+        nLast = nFirst;
+    }
+
+    sOp = sCmd[nPos..nPos];
+    if( length(sOp) < 1 ) sOp = "c";
+    nPos += 1;
+
+    if( sCmd[nPos..nPos] == " " ) sArg = sCmd[nPos+1..];
+    else sArg = null;
+    
+//oCaller.RawMessage( "-> " + nFirst + ", " + nLast + ", " + sOp + ", '" + to_string(sArg) + "'\n" );
+
+    switch( sOp )
+    {
+        case "q":
+            // Quit with no changes
+            
+            if( this.EditIsDirty(sBuffer) )
+                return "Buffer has been modified. Use 'Q' to lose changes.";
+
+            if( this.EditCloseBuffer( sBuffer ) )
+                return "Closing editor (no changes).";
+
+            return "Failed to close edit buffer.";
+            
+        case "Q":
+            // Quit and lose changes
+            
+            if( this.EditCloseBuffer( sBuffer ) )
+                return "Closing editor (any changes have been lost).";
+
+            return "Failed to close edit buffer.";
+            
+        case "x":
+            // Save or Compile and quit
+            
+            if( this.EditIsDirty(sBuffer) )
+            {
+                if( this.EditIsFunction( sBuffer ) )
+                {
+                    mResult = this.EditCompile( sBuffer, null, oCaller );
+                    if( stringp(mResult) ) return mResult;
+                    oCaller.MessageNoWrap( "Compiled." );
+                }
+                else
+                {
+                    mResult = this.EditSave( sBuffer, null, oCaller );
+                    if( stringp(mResult) ) return mResult;
+                    oCaller.MessageNoWrap( "Saved." );
+                }
+
+            }
+
+            this.EditCloseBuffer( sBuffer );
+            return 1;
+            
+        case "s":
+            // Save string buffer
+            
+            if( !this.EditIsFunction( sBuffer ) )
+            {
+                mResult = this.EditSave( sBuffer, sArg, oCaller );
+                if( stringp(mResult) ) return mResult;
+                
+                return "Saved.";
+            }
+            
+            return "Editing a function; use 'S' to save source.";
+            
+        case "S":
+            // Save string or function buffer as a string
+            
+            mResult = this.EditSave( sBuffer, sArg, oCaller );
+            if( stringp(mResult) ) return mResult;
+            
+            return "Saved.";
+            
+        case "C":
+            // Compile buffer to a function and save
+            
+            mResult = this.EditCompile( sBuffer, sArg, oCaller );
+            if( stringp(mResult) ) return mResult;
+            
+            return "Compiled.";
+            
+        case "c":
+            // Change lines in the buffer until "."
+            
+            if( !this.EditRemoveLines( sBuffer, nFirst, nLast ) )
+                return "Failed to change lines.";
+
+            nLine = nFirst;
+            repeat
+            {
+                sArg = oCaller.ReadLine( nLine + "*" );
+                if( sArg == "." ) break;
+                if( !this.EditInsertLine( sBuffer, nLine, sArg ) )
+                    return "Failed to insert line.";
+                nLine += 1;
+            }
+            
+            arInfo[4] = nLine;
+            return 1;
+
+        case "a":
+            // Append lines to the buffer until "."
+            
+            nLine = nFirst + 1;
+            repeat
+            {
+                sArg = oCaller.ReadLine( nLine + "*" );
+                if( sArg == "." ) break;
+                if( !this.EditInsertLine( sBuffer, nLine, sArg ) )
+                    return "Failed to insert line.";
+                nLine += 1;
+            }
+            
+            arInfo[4] = nLine;
+            return 1;
+
+        case "i":
+            // Insert lines into the buffer until "."
+            
+            nLine = nFirst;
+            repeat
+            {
+                sArg = oCaller.ReadLine( nLine + "*" );
+                if( sArg == "." ) break;
+                if( !this.EditInsertLine( sBuffer, nLine, sArg ) )
+                    return "Failed to insert line.";
+                nLine += 1;
+            }
+            
+            arInfo[4] = nLine;
+            return 1;
+
+        case "d":
+            // Delete lines from the buffer
+            if( !this.EditRemoveLines( sBuffer, nFirst, nLast ) )
+                return "Failed to remove lines.";
+            
+            arInfo[4] = nFirst;
+            return 1;
+
+        case "p":
+            // Display lines of the buffer
+            
+            arInfo[4] = nLast;
+            this.EditDisplay( sBuffer, nFirst, nLast, oCaller );
+            return 1;
+
+        case "z":
+            // Display 20 lines of the buffer
+            
+            nLast = nFirst + 20;
+            if( nLast > nBufferLen ) nLast = nBufferLen;
+            arInfo[4] = nLast;
+            this.EditDisplay( sBuffer, nFirst, nLast, oCaller );
+            return 1;
+
+        case "Z":
+            // Display 40 lines of the buffer
+            
+            nLast = nFirst + 40;
+            if( nLast > nBufferLen ) nLast = nBufferLen;
+            arInfo[4] = nLast;
+            this.EditDisplay( sBuffer, nFirst, nLast, oCaller );
+            return 1;
+    }
+    
+    return 0;
+}
+
+
+Name()
+{
+    return this.name;
+}
+
+Login( ptSocket, passwd )
+{
+    // Attempt to log in as this user
+
+    // Authenticate the password
+    if( !this.password || crypt( passwd, this.password ) == this.password )
+    {
+        // Check if the user is already logged on
+        if( this.loginSocket )
+        {
+            // Drop the existing connection first
+            write_text( ptSocket, "\nYour character is already logged on.\nLet's boot the "
+              "other thingy off, shall we?\n" );
+
+            try
+            {
+                write_text( this.loginSocket, "\nYou are being disconnected (sorry).\n" );
+            }
+
+            this.DropConnection();
+
+            this.loginSocket = ptSocket;
+            this.loginDaemon.Inform( this.name + " reconnects" );
+        }
+        else
+        {
+            this.loginSocket = ptSocket;
+            this.loginDaemon.Inform( this.name + " enters " + this.mudName );
+        }
+
+        // Start the main user threa
+        this.loginThread = thread this.UserMain();
+
+        return 1;
+    }
+
+    return 0;
+}
+
+UserMain()
+{
+    // Main thread for logged in user
+
+    try
+    {
+        // Display the sMessage of the day
+        this.Message( this.loginDaemon.GetNews( this ) );
+
+        // Move the user into their start room
+        if( !this.location ) this.Move( this.startLocation, null, null, this );
+        else this.Look();
+    }
+    catch( err )
+    {
+        this.ReportError( err );
+    }
+
+    repeat
+    {
+        sCmd = "";
+
+        try
+        {
+            // Display the user's prompt
+            if( objectp(this.location) )
+            {
+                oHere = this.location;
+                sPrompt = "<#g" + this.hp + "#nhp #m" + this.en + "#ne #g" +
+                    this.mv + "#nmv " + oHere.GetExitSummary() + "> ";
+            }
+            else sPrompt = "limbo> ";
+            this.MessageNoWrap( "\n" + sPrompt );
+        }
+        catch( err )
+        {
+            this.ReportError( err );
+        }
+
+        try
+        {
+            // Wait for a user command
+            sCmd = trim( read_line( this.loginSocket ) );
+        }
+        catch( err )
+        {
+            // User's connection has been dropped
+            return this.Quit();
+        }
+
+        if( length( sCmd ) > 0 )
+        {
+            try
+            {
+                this.DoCommand( sCmd );
+            }
+            catch( err )
+            {
+                this.ReportError( err );
+            }
+        }
+    }
+}
+
+ReadLine( sPrompt )
+{
+    repeat
+    {
+        if( sPrompt ) this.MessageNoWrap( sPrompt );
+
+        sLine = read_line( this.loginSocket );
+        if( sLine[0..0] != "!" ) return sLine;
+
+        // Escape this line of input
+        try
+        {
+            this.DoCommand( sLine[1..] );
+        }
+        catch( err )
+        {
+            this.ReportError( err );
+        }
+    }
+}
+
+RequestLine( sPrompt )
+{
+    repeat
+    {
+        sLine = this.ReadLine( sPrompt );
+        if( sLine != "" ) return sLine;
+    }
+}
+
+ReportError( err, bUncaught )
+{
+    if( this.loginSocket )
+    {
+        sResult = this.DescribeError( err, bUncaught );
+
+        try
+        {
+            // Display the error to this user
+            this.MessageNoWrap( "#K" + replace( sResult, "#", "##" ) );
+        }
+        catch( ierr )
+        {
+            if( this.loginSocket ) write_text( this.loginSocket, sResult );
+        }
+    }
+}
+
+ResolveMessage( sMessage, oAgent, mContext )
+{
+    if( !oAgent ) oAgent = this;
+    if( !mContext ) mContext = [];
+    else if( !arrayp(mContext) ) mContext = [mContext];
+
+    nSize = sizeof(mContext);
+    nLen = length(sMessage);
+
+    sResult = "";
+    sDelim = "$";
+    sInDelim = ":";
+    nStart = 0;
+
+    repeat
+    {
+        // Find the next starting delimiter
+        nOfs = search( sMessage, sDelim, nStart );
+        if( nOfs < 0 ) return sResult + sMessage[nStart..-1]; // stop; finished
+
+        // Keep the segment before the delimiter
+        if( nOfs ) sResult += sMessage[nStart..nOfs - 1];
+
+        // Find the matching end delimiter
+        nEnd = search( sMessage, sDelim, nOfs + 1 );
+        if( nEnd < 0 ) return sResult; // stop; unmatched delimiter
+        nStart = nEnd + 1;
+
+        nOfs += 1;
+        nEnd -= 1;
+
+        // Check for the capitalise prefix
+        if( sMessage[nOfs..nOfs] == "^" )
+        {
+            nOfs += 1;
+            bCapitalise = 1;
+        }
+        else bCapitalise = 0;
+
+        // Search for an internal delimiter
+        nSplit = search( sMessage, sInDelim, nOfs );
+        if( nSplit > nOfs && nSplit < nEnd )
+        {
+            sTarget = sMessage[nOfs..nSplit - 1];
+            sAttrib = sMessage[nSplit + 1..nEnd];
+        }
+        else
+        {
+            sTarget = sMessage[nOfs..nEnd];
+            sAttrib = "";
+        }
+
+        sAppend = null;
+        nIndex = 0;
+        switch( sTarget )
+        {
+            case "agent":
+                nIndex = 0;
+                break;
+
+            case "target":
+                nIndex = 1;
+                break;
+
+            case "mudname":
+                sAppend = this.mudName;
+                break;
+
+            case "":
+                sAppend = "$";
+                break;
+
+            default:
+                nIndex = to_int(sTarget);
+                break;
+        }
+
+        if( !sAppend )
+        {
+            if( nIndex == 0 )
+            {
+                sAppend = this.ListItems( oAgent, oAgent );
+            }
+            else if( nIndex > 0 && nIndex <= nSize )
+            {
+                switch( sAttrib )
+                {
+                    case "":
+                    case "name":
+                        sAppend = this.ListItems( mContext[nIndex - 1], oAgent );
+                        break;
+
+                    default:
+                        continue;
+                }
+            }
+            else
+            {
+                // Also trim trailing spaces?
+                continue;
+            }
+        }
+
+        if( bCapitalise ) sResult += capitalise(sAppend);
+        else sResult += sAppend;
+    }
+}
+
+Message( sMessage, oAgent, mContext )
+{
+    if( search( sMessage, "$" ) >= 0 )
+    {
+        // Resolve all message placeholders
+        sMessage = this.ResolveMessage( sMessage, oAgent, mContext );
+    }
+
+    // Word-wrap the message to the configured screen width
+    sMessage = this.terminalDaemon.Wrap( sMessage, this.cols );
+
+    // Check if the message contains any colour
+    if( search( sMessage, "#" ) >= 0 )
+    {
+        // Resolve all colour codes in the message
+        sMessage = this.terminalDaemon.ResolveColour( sMessage + "#n", this.term );
+    }
+
+    // Apply colour and write the message to the user
+    this.RawMessage( sMessage + "\n" );
+}
+
+MessageNoWrap( sMessage )
+{
+    // Check if the message contains any colour
+    if( search( sMessage, "#" ) >= 0 )
+    {
+        // Resolve all colour codes in the message
+        sMessage = this.terminalDaemon.ResolveColour( sMessage + "#n", this.term );
+    }
+
+    // Apply colour and write the message to the user
+    this.RawMessage( sMessage );
+}
+
+RawMessage( sMessage )
+{
+    // Write the message out to the user
+    ptOut = this.loginSocket;
+    if( ptOut ) write_text( ptOut, sMessage );
+    else this.DropConnection();
+}
+
+DoCommand( sCmd )
+{
+    // Execute a user command
+
+    // Set the initial result
+    sResult = "What?";
+
+    // Check for the quit command (special case)
+    if( lower_case( sCmd ) == "quit" ) return this.Quit();
+
+    // Split the command into verb and arguments
+    nPos = search( sCmd, " " );
+    if( nPos > -1 )
+    {
+        // Split at the first space
+        sVerb = lower_case( sCmd[0..nPos - 1] );
+        sArgs = sCmd[nPos + 1..];
+    }
+    else
+    {
+        // No space was found
+        sVerb = lower_case( sCmd );
+        sArgs = "";
+    }
+
+    //this.Message( "Verb: '" + sVerb + "'  Args: '" + sArgs + "'" );
+
+    // Check for global aliases
+    if( exists( this.globalAlias, sVerb ) ) sVerb = this.globalAlias[sVerb];
+
+    // Check for a command
+    if( objectp(this.commands[sVerb]) )
+    {
+        sResult = this.commands[sVerb].Command( sArgs, this );
+        if( stringp(sResult) ) this.Message( sResult );
+        return;
+    }
+
+    // Check for an exit direction
+    sExit = this.FollowExit( sVerb );
+    if( sExit != null )
+    {
+        if( stringp(sExit) ) this.Message( sExit );
+        return;
+    }
+    else
+    {
+        if( exists( this.allowedExits, sVerb ) )
+        {
+            this.Message( "You cannot go " + sVerb + " from here." );
+            return;
+        }
+    }
+
+    // Check for an emote etc
+    // ...
+
+    if( stringp(sResult) ) this.Message( sResult );
+}
+
+Quit()
+{
+    // Wrap these in try-catches in case the socket drops out half-way
+
+    try
+    {
+        // Move the user out of the current room and into limbo
+        if( this.location )
+        {
+            this.startLocation = this.location;
+            this.Move( null, null, null, this );
+        }
+
+        // Display a quit message
+        this.Message( "\nAlright I'll see you later then.\n\n" );
+    }
+
+    try
+    {
+        this.loginDaemon.Inform( this.Name() + " leaves " + this.mudName );
+    }
+
+    return this.DropConnection();
+}
+
+DropConnection()
+{
+    // Don't send any user messages directly or indirectly from here
+    // Remove the user from the on-line list
+    this.loginDaemon.LogoutUser( this );
+
+    // Silently and forcedly remove the user from their location
+    if( this.location )
+    {
+        this.location.RemoveObject( this );
+        this.location = null;
+    }
+
+    // Clean up the connection socket and thread
+    if( this.loginSocket ) close( this.loginSocket );
+    this.loginSocket = null;
+    if( this.loginThread ) kill_thread( this.loginThread );
+    this.loginThread = null;
+}
+
+IsConnected()
+{
+    return (this.loginSocket && this.loginThread);
+}
+
+BuildStatusBar( oHere )
+{
+    // Determine all status bar information
+    sTime = "Day";
+    sTerrain = "Room";
+    sObvious = oHere.GetExitSummary();
+    sWeather = "???";
+    sArea = "Unknown";
+    sLight = "Well Lit";
+
+    nCols = this.cols;
+    sBar = "+=" + this.RepeatString( "-", nCols - 4 ) + "=+\n";
+    sResult = sBar;
+
+    nSpace = nCols - 34; // static text
+    nGutter = to_int(nCols / 16); // magic number (appropriate gutter)
+    nSpace -= nGutter * 2; // leave gutters at each end
+
+    nCol = to_int(nSpace / 3); // divide into 3 columns
+    nSpace -= nCol * 3; // leave only the rounding error
+
+    sGutter = this.RepeatString( " ", nGutter );
+    sResult += "|" + sGutter + "Lighting: " +
+      this.PadString( sLight, nCol + 3 ) + " Time: " +
+      this.PadString( sTime, nCol + 2 ) + " Terrain: " +
+      this.PadString( sTerrain, nCol + nSpace ) + sGutter + "|\n";
+
+    sResult += "|" + sGutter + "   Exits: " +
+      this.PadString( sObvious, nCol ) + " Weather: " +
+      this.PadString( sWeather, nCol ) + "      Area: " +
+      this.PadString( sArea, nCol + nSpace ) + sGutter + "|\n";
+
+    return sResult + sBar;
+}
+
+Look()
+{
+    // Look around the environment
+    oHere = this.location;
+    if( !oHere ) return "You are in limbo.";
+
+    // Include the path to the location for creators
+    if( this.creator ) sResult = "#K" + replace( object_path(oHere), "#", "##" ) + "#n\n";
+    else sResult = "\n";
+
+    // Add the room name
+    nCols = this.cols;
+    sResult += "#c" + this.Center( oHere.Name(), nCols ) + "#n\n";
+
+    // Add the status bar
+    sResult += this.BuildStatusBar( oHere );
+
+    // Add the room description
+    sDesc = oHere.Describe( this );
+    sDesc = this.terminalDaemon.Wrap( sDesc, nCols );
+    sResult += sDesc;
+
+    this.MessageNoWrap( sResult );
+}
+
+ReceiveTell( oAgent, sMessage )
+{
+    // Add this to the tell history
+    arAppend = [ [ oAgent, sMessage ] ];
+    if( length(this.tellHistory) >= 20 )
+    {
+        this.tellHistory = this.tellHistory[-19..] + arAppend;
+    }
+    else this.tellHistory += arAppend;
+
+    // Tell the user
+    if( oAgent == this ) sResult = "#YYou tell yourself:#n " + sMessage;
+    else sResult = "#Y" + oAgent.name + " tells you:#n " + sMessage;
+
+    this.Message( sResult );
+}
+
+DisplayTellHistory()
+{
+    arHistory = this.tellHistory;
+    nLen = sizeof(arHistory);
+    if( nLen )
+    {
+        sResult = "";
+        foreach( arTell in arHistory )
+        {
+            oAgent = arTell[0];
+            sArgs = arTell[1];
+            if( oAgent == this ) sResult += "#YYou tell yourself:#n " + sArgs + "\n";
+            else sResult += "#Y" + oAgent.name + " tells you:#n " + sArgs + "\n";
+        }
+        sResult = sResult[0..-3];
+    }
+    else sResult = "You have no tell history.";
+
+    this.Message( sResult );
+}
+
+
+[$.lib.cmd.user.look]
+[$.lib.cmd.user.inventory]
+[$.lib.cmd.user.users]
+
+[$.lib.cmd.user]
+
+l = $.lib.cmd.user.look;
+i = $.lib.cmd.user.inventory;
+who = $.lib.cmd.user.users;
+
+
+[$.lib.cmd.user.look]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        oThing = oCaller.location.FindMatch( sArgs, null, oCaller );
+        if( !oThing )
+        {
+            sDesc = oCaller.location.LookItem( sArgs );
+            if( sDesc ) return sDesc;
+            
+            return "There is no " + sArgs + " here.";
+        }
+        return oThing.Describe();
+    }
+
+    // Look around the room
+    oCaller.Look();
+}
+
+
+[$.lib.cmd.user.inventory]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    sResult = "";
+
+    // Build the array of visible items
+    arContents = oCaller.contents;
+    arItems = [];
+    arWorn = [];
+    foreach( oThing in arContents )
+    {
+        if( oThing.visible )
+        {
+            if( oThing.worn ) arWorn += [ oThing ];
+            else arItems += [ oThing ];
+        }
+    }
+
+    sItems = this.ListItems( arItems, oCaller );
+    if( length(sItems) ) sResult += "#gYou are carrying: #n" + sItems + ".\n";
+    else sResult += "#gYou are empty-handed.#n\n";
+
+    sItems = this.ListItems( arWorn, oCaller );
+    if( length(sItems) ) sResult += "#rYou are wearing: #n" + sItems + ".";
+    else sResult += "#rYou are completely naked.#n";
+
+    return sResult;
+}
+
+
+[$.lib.cmd.user.say]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) < 1 ) return "You must supply some wisdom to utter.";
+
+    oCaller.Say( sArgs );
+    return "#cYou say:#n " + sArgs;
+}
+
+
+[$.lib.cmd.user.emote]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) < 1 ) return "You must supply that clever action you wish to perform.";
+
+    oCaller.Emote( sArgs );
+    return "#g" + oCaller.Name() + " " + sArgs;
+}
+
+
+[$.lib.cmd.user.get]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) < 1 ) return "What do you wish to take?";
+    if( !(oHere = oCaller.location) ) return "You are in limbo.";
+
+    // Split into item and container
+    sArgs = lower_case(sArgs);
+    nPos = search( sArgs, " from " );
+    if( nPos > -1 )
+    {
+        // Split at the first space
+        sItem = sArgs[0..nPos - 1];
+        sContain = sArgs[nPos + 4..];
+
+        oContain = oCaller.FindMatch( sContain, null, oCaller );
+        if( !oContain )
+        {
+            oContain = oHere.FindMatch( sContain, null, oCaller );
+            return "There is no " + sContain + " here.";
+        }
+
+        oItem = oContain.FindMatch( sItem, null, oCaller );
+        if( !oItem ) return "There is no " + sItem + " in " + oContain.TheName() + ".";
+
+        mResult = oItem.Get( oCaller );
+        if( mResult != 1 )
+        {
+            if( stringp(mResult) ) return mResult;
+            return "You cannot take " + oItem.TheName() + ".";
+        }
+
+        mResult = oItem.Move( oCaller, "$agent$ take*s $1$ from $2$", null, oCaller, [oItem, oContain] );
+        if( mResult != 1 )
+        {
+            if( stringp(mResult) ) return mResult;
+            return "You cannot take " + oItem.TheName() + ".";
+        }
+
+        return "You take " + oItem.TheName() + " from " + oContain.TheName() + ".";
+    }
+    else
+    {
+        oItem = oHere.FindMatch( sArgs, null, oCaller );
+        if( !oItem ) return "There is no " + sArgs + " here.";
+
+        mResult = oItem.Get( oCaller );
+        if( mResult != 1 )
+        {
+            if( stringp(mResult) ) return mResult;
+            return "You cannot take " + oItem.TheName() + ".";
+        }
+
+        mResult = oItem.Move( oCaller, "$agent$ take*s $1$.", null, oCaller, oItem );
+        if( mResult != 1 )
+        {
+            if( stringp(mResult) ) return mResult;
+            return "You cannot take " + oItem.TheName() + ".";
+        }
+
+        return "You pick up " + oItem.TheName() + ".";
+    }
+}
+
+
+[$.lib.cmd.user.drop]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) < 1 ) return "What do you wish to drop?";
+    if( !(oHere = oCaller.location) ) return "You are in limbo.";
+
+    sArgs = lower_case(sArgs);
+    oItem = oCaller.FindMatch( sArgs, null, oCaller );
+    if( !oItem ) return "You have no " + sArgs + ".";
+
+    mResult = oItem.Drop( oCaller );
+    if( mResult != 1 )
+    {
+        if( stringp(mResult) ) return mResult;
+        return "You cannot drop " + oItem.TheName() + ".";
+    }
+
+    mResult = oItem.Move( oHere, "$agent$ drop*s $1$.", null, oCaller, oItem );
+    if( mResult != 1 )
+    {
+        if( stringp(mResult) ) return mResult;
+        return "You cannot drop " + oItem.TheName() + ".";
+    }
+
+    return "You drop " + oItem.TheName() + ".";
+}
+
+
+[$.lib.cmd.user.put]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) < 1 ) return "What do you wish to put, and where?";
+    if( !(oHere = oCaller.location) ) return "You are in limbo.";
+
+    // Split into item and container
+    sArgs = lower_case(sArgs);
+    nPos = search( sArgs, " in " );
+    if( nPos > -1 )
+    {
+        // Split at the first space
+        sItem = sArgs[0..nPos - 1];
+        sContain = sArgs[nPos + 4..];
+    }
+    else
+    {
+        return "Usage: put <item> in <container>";
+    }
+
+    oItem = oCaller.FindMatch( sItem, null, oCaller );
+    if( !oItem )
+    {
+        oItem = oHere.FindMatch( sItem, null, oCaller );
+        return "There is no " + sItem + " here.";
+    }
+
+    oContain = oCaller.FindMatch( sContain, null, oCaller );
+    if( !oContain )
+    {
+        oContain = oHere.FindMatch( sContain, null, oCaller );
+        return "There is no " + sContain + " here.";
+    }
+
+    mResult = oItem.Put( oContain, oCaller );
+    if( mResult != 1 )
+    {
+        if( stringp(mResult) ) return mResult;
+        return "You cannot put " + oItem.TheName() + " in " + oContain.TheName() + ".";
+    }
+
+    mResult = oItem.Move( oCaller, "$agent$ put*s $1$ in $2$.", null, oCaller, [oItem, oContain] );
+    if( mResult != 1 )
+    {
+        if( stringp(mResult) ) return mResult;
+        return "You cannot put " + oItem.TheName() + " in " + oContain.TheName() + ".";
+    }
+
+    return "You put " + oItem.TheName() + " in " + oContain.TheName() + ".";
+}
+
+
+[$.lib.cmd.user.users]
+-> $.lib.basic.command
+
+OldCommand( sArgs, oCaller )
+{
+    starline = "#m" + oCaller.Center( oCaller.RepeatString( "*", oCaller.cols - 20 ),
+        oCaller.cols ) + "\n";
+    mudname = "#C " + oCaller.mudName + " #m";
+    s = "";
+    counter = 0;
+    number = 0;
+    foreach( user in this.loginDaemon.Users() ) {
+        counter = counter +1;
+        if( counter == 3 ) {
+            counter = 0;
+            s += user.name + "\n";
+            number = number + 1;
+        }
+        else {
+            s += user.name + "   ";
+            number = number + 1;
+        }
+    }
+    s += "\n There are currently " + number + " of users online\n";
+    result = starline + "#mUsers for" + mudname + "currently online.\n" + starline;
+    result += s + starline;
+    oCaller.Message( result );
+}
+
+
+[$.lib.cmd.user.chat]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    result = "#G[chat] " + oCaller.name + ":#n " + sArgs;
+    this.loginDaemon.Broadcast( result );
+}
+
+
+[$.lib.cmd.user.tell]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( sArgs )
+    {
+        // Split into name and message
+        nPos = search( sArgs, " " );
+        if( nPos > -1 )
+        {
+            // Split at the first space
+            sName = sArgs[0..nPos - 1];
+            sArgs = sArgs[nPos + 1..];
+
+            // Find the user
+            oUser = this.loginDaemon.FindUser( sName );
+            if( !oUser ) return "User is not logged on: " + sName;
+
+            // Send the tell to the user
+            oUser.ReceiveTell( oCaller, sArgs );
+
+            if( oUser == oCaller ) return 1;
+            return "#YYou tell " + oUser.name + ":#n " + sArgs;
+        }
+
+        return "Usage: tell <user> <stuff>";
+    }
+
+    oCaller.DisplayTellHistory();
+    return 1;
+}
+
+
+[$.lib.cmd.user.follow]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) < 1 ) return "Who do you wish to follow?";
+    if( !(oHere = oCaller.location) ) return "You are in limbo.";
+
+    sArgs = lower_case(sArgs);
+    oTarget = oHere.FindMatch( sArgs, null, oCaller );
+    if( !oTarget ) return "There is no " + sArgs + " here.";
+
+    if( oTarget.IsFollowing( oCaller, oCaller ) )
+        return "You are already following " + oTarget.TheName() + ".";
+
+    mResult = oTarget.TestFollow( oCaller, oCaller );
+    if( mResult != 1 )
+    {
+        if( stringp(mResult) ) return mResult;
+        return "You cannot follow " + oTarget.TheName() + ".";
+    }
+
+    oTarget.AddFollower( oCaller );
+
+    return "You begin following " + oTarget.TheName() + ".";
+}
+
+[$.lib.cmd.user.unfollow]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) < 1 ) return "Who do you wish to stop following?";
+    if( !(oHere = oCaller.location) ) return "You are in limbo.";
+
+    sArgs = lower_case(sArgs);
+    oTarget = oHere.FindMatch( sArgs, null, oCaller );
+    if( !oTarget ) return "There is no " + sArgs + " here.";
+    
+    if( !oTarget.IsFollowing( oCaller, oCaller ) )
+        return "You are not following " + oTarget.TheName() + ".";
+
+    oTarget.RemoveFollower( oCaller );
+
+    return "You stop following " + oTarget.TheName() + ".";
+}
+
+
+
+[$.lib.cmd.creator.cat]
+
+[$.lib.cmd.creator]
+-> $.lib.cmd.user
+
+stat = $.lib.cmd.creator.cat;
+
+
+[$.lib.cmd.creator.ls]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    // List attributes in current object
+    nCell = 16;
+    nCols = oCaller.cols;
+    
+    bSuffix = 0;
+    if( sArgs[0..1] == "-F" ) { bSuffix = 1; sArgs = sArgs[3..]; }
+
+    if( length( sArgs ) )
+    {
+        // Find the specified object
+        ob = find_object( sArgs, oCaller.cwd );
+        if( !ob ) return "not found: " + sArgs;
+    }
+    else
+    {
+        // Use the current working directory
+        ob = oCaller.cwd;
+    }
+
+    // Build the object header
+    result = "[" + object_path( ob ) + "]\n";
+    foreach( oInherit in inherit_list( ob ) )
+    {
+        result += "-> " + object_path( oInherit ) + "\n";
+    }
+
+    // result += "\n";
+    arResult = [];
+
+    // List all the directories
+    foreach( name in keys( ob ) )
+    {
+        val = ob[name];
+        if( objectp(val) )
+        {
+            if( childp(val) )
+            {
+                if( sizeof(inherit_list(val)) == 0 )
+                {
+                    // Object is a directory
+                    if( bSuffix ) arResult += [ "#g" + name + "." ];
+                    else arResult += [ "#g" + name ];
+                }
+                else
+                {
+                    // Object is a 'real' object
+                    if( bSuffix ) arResult += [ "#m" + name + "." ];
+                    else arResult += [ "#m" + name ];
+                }
+            }
+            else
+            {
+                // Object is a symbolic link
+                if( bSuffix ) arResult += [ "#c" + name + "@" ];
+                else arResult += [ "#c" + name ];
+            }
+        }
+    }
+
+    // Add the list of attributes
+    foreach( name in keys( ob ) )
+    {
+        val = ob[name];
+        if( !objectp(val) )
+        {
+            if( bSuffix )
+            {
+                if( integerp(val) ) sItem = "" + name + "%";
+                else if( realp(val) ) sItem = "" + name + "~";
+                else if( rangep(val) ) sItem = "" + name + "-";
+                else if( stringp(val) ) sItem = "" + name + "$";
+                else if( arrayp(val) ) sItem = "" + name + "[]";
+                else if( mappingp(val) ) sItem = "" + name + "[]";
+                else if( functionp(val) ) sItem = "" + name + "()";
+                else if( portp(val) ) sItem = "" + name + "!";
+                else if( threadp(val) ) sItem = "" + name + "&";
+                else sItem = name;
+                arResult += [ sItem ];
+            }
+            else arResult += [ name ];
+        }
+    }
+
+    nCurrent = 0;
+    foreach( sItem in arResult )
+    {
+        nLen = length(sItem) + 1; // 1 for trailing space
+        if( sItem[0..0] == "#" ) nLen -= 2; // adjust for colour
+        if( nCurrent + nLen >= nCols && nCurrent > 0 ) { result += "\n"; nCurrent = 0; }
+        result += sItem + "#n ";
+        nCurrent += nLen;
+        nPad = nCell - (nLen % nCell);
+        if( nPad != nCell )
+        {
+            result += this.RepeatString( " ", nPad );
+            nCurrent += nPad;
+        }
+    }
+
+    oCaller.MessageNoWrap( result + "\n" );
+    return 1;
+}
+
+
+[$.home]
+
+[$.lib.cmd.creator.cd]
+-> $.lib.basic.command
+
+home = $.home;
+
+Command( sArgs, oCaller )
+{
+    // Change current working directory
+    if( !length(sArgs) )
+    {
+        // Change to user home directory
+        sUsername = oCaller.username;
+        if( exists( this.home, sUsername ) ) oDir = this.home[sUsername];
+        else oDir = this.root;
+    }
+    else
+    {
+        oDir = find_object( sArgs, oCaller.cwd );
+        if( !oDir ) return "not found: " + sArgs;
+    }
+
+    oCaller.cwd = oDir;
+
+    oCaller.RawMessage( object_path( oDir ) + "\n" );
+    return 1;
+}
+
+
+[$.lib.cmd.creator.pwd]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    // Display current working directory
+    oCaller.RawMessage( object_path( oCaller.cwd ) + "\n" );
+    return 1;
+}
+
+
+[$.lib.cmd.creator.cat]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    // Show attributes and values in current object
+
+    if( length( sArgs ) )
+    {
+        // Find the specified object
+        if( sArgs == "." ) mValue = oCaller.cwd;
+        else
+        {
+            mValue = this.FindPathValue( sArgs, oCaller.cwd );
+            if( mValue == null ) return "Not found: " + sArgs;
+        }
+
+        if( objectp(mValue) )
+        {
+            // Build the object header
+            sResult = "[" + object_path( mValue ) + "]\n";
+            arList = inherit_list( mValue );
+            if( sizeof(arList) )
+            {
+                foreach( oInherit in arList )
+                {
+                    sResult += "-> " + object_path( oInherit ) + "\n";
+                }
+            }
+            sResult += "\n";
+
+            // Add the list of attributes
+            foreach( sName in keys( mValue ) )
+            {
+                mAttrib = mValue[sName];
+                if( functionp(mAttrib) )
+                {
+                    sResult += encode( mAttrib ) + "\n";
+                    continue;
+                }
+            }
+            foreach( sName in keys( mValue ) )
+            {
+                mAttrib = mValue[sName];
+                if( objectp(mAttrib) )
+                {
+                    sResult += sName + " = " + object_path( mAttrib ) + "\n";
+                    continue;
+                }
+                if( !functionp(mAttrib) )
+                    sResult += sName + " = " + encode( mAttrib ) + "\n";
+            }
+            
+            oCaller.RawMessage( sResult );
+            return 1;
+        }
+        else if( stringp(mValue) )
+        {
+            oCaller.RawMessage( mValue + "\n" );
+            return 1;
+        }
+        else
+        {
+            oCaller.RawMessage( encode( mValue ) + "\n" );
+            return 1;
+        }
+    }
+}
+
+
+[$.lib.cmd.creator.set]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Split the sArgs into name and string
+        nPos = search( sArgs, "=" );
+        if( nPos > -1 )
+        {
+            // Split at the '=' delimiter
+            sName = trim(sArgs[0..nPos - 1]);
+            sArgs = sArgs[nPos + 1..];
+            
+            if( search( sName, " " ) > -1 ) return "Invalid attribute name";
+
+            oTarget = this.FindPathName( sName, oCaller.cwd );
+            if( !oTarget ) return "Not found: " + name;
+            sName = oTarget[1];
+            oTarget = oTarget[0];
+
+            // Use the built-in parser to import the value
+            arResult = parse( "value = " + sArgs );
+            if( stringp(arResult[1]) )
+            {
+                // Display error messages
+                oCaller.MessageNoWrap( "#C" + arResult[1] );
+                return;
+            }
+            else
+            {
+                mValue = arResult[0];
+                oTarget[sName] = mValue;
+                oCaller.RawMessage( "Set '" + sName + "' to: " + to_string( mValue ) + "\n" );
+                return;
+            }
+        }
+    }
+
+    return "Usage: set [<path>.]<attribute> = <value>";
+}
+
+
+[$.lib.cmd.creator.build]
+-> $.lib.basic.command
+
+newRoom = $.lib.basic.room;
+mainMenu = [ "Set room name", "Set room class", "Set room description", "Set light level", "Manage exits", "Manage room items", "Manage inventory", "", "x:Exit the room editor", "g:Exit and go to the room" ];
+
+SetName( oRoom, sRoomPath, oCaller )
+{
+    oCaller.Message( "Quintiqua Room Name Editor: " + sRoomPath + "\n\n"
+      "Current name: #C" + oRoom.name + "#n\n\n"
+      "Please enter a new name for this room, beginning with a capital "
+      "letter, but excluding any trailing punctuation. To keep the "
+      "existing room name, just press enter.\n" );
+
+    sName = trim( oCaller.ReadLine( "New room name (press enter for no change): " ) );
+    if( sName == "" ) return;
+
+    // Modify the room name
+    oRoom.name = sName;
+    oCaller.Message( "\nRoom name set to: #C" + oRoom.name + "#n" );
+}
+
+Command( sArgs, oCaller )
+{
+    if( sArgs == "" )
+    {
+        if( !oCaller.location ) return "You are in limbo.";
+        
+        oRoom = oCaller.location;
+        sRoomPath = replace( object_path( oRoom ), "$", "$$" );
+    }
+    else if( sArgs == "." )
+    {
+        oRoom = oCaller.cwd;
+        sRoomPath = replace( object_path( oRoom ), "$", "$$" );
+
+        if( !functionp(oRoom.AddObject) ) return "Not a room: " + sRoomPath;
+    }
+    else
+    {
+        // Find the specified target
+        oTarget = this.FindPathName( sArgs, oCaller.cwd );
+        if( !oTarget ) return "Not found: " + sArgs;
+        sName = oTarget[1];
+        oTarget = oTarget[0];
+
+        // Check if the target already exists
+        if( !exists( oTarget, sName ) )
+        {
+            // Create a room with this name
+            oRoom = new object( sName, oTarget );
+            add_inherit( oRoom, this.newRoom );
+            sRoomPath = replace( object_path( oRoom ), "$", "$$" );
+
+            oCaller.Message( "Created room: " + sRoomPath );
+        }
+        else
+        {
+            // Check if the existing target is a room
+            if( !objectp(oTarget[sName]) ) return "Not a room: " + sArgs;
+
+            oRoom = oTarget[sName];
+            sRoomPath = replace( object_path( oRoom ), "$", "$$" );
+
+            if( !functionp(oRoom.AddObject) ) return "Not a room: " + sRoomPath;
+        }
+    }
+
+    repeat
+    {
+        sChoice = this.DisplayMenu( oCaller, "Quintiqua Room Editor: " + sRoomPath, this.mainMenu );
+        switch( sChoice )
+        {
+            case "1":
+                this.SetName( oRoom, sRoomPath, oCaller );
+                break;
+
+            case "2":
+                break;
+
+            case "3":
+                break;
+
+            case "4":
+                break;
+
+            case "5":
+                break;
+
+            case "6":
+                break;
+
+            case "7":
+                break;
+
+            case "x":
+                return 1;
+
+            case "g":
+                return oCaller.Move( oRoom, oCaller.TheName() + " teleports out.",
+                  oCaller.AName() + " teleports in." );
+        }
+    }
+}
+
+
+[$.lib.cmd.creator.goto]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Find the target user by name
+        oDest = this.loginDaemon.FindUser( sArgs );
+        if( oDest )
+        {
+            oDest = oDest.location;
+            if( !oDest ) return "User has no location.";
+        }
+        else
+        {
+            // Find the target object by path
+            oDest = find_object( sArgs, oCaller.cwd );
+            if( !oDest ) return "Not found: " + sArgs;
+        }
+
+        if( oCaller.location == oDest ) return "You are already there.";
+        
+        return oCaller.Move( oDest, oCaller.TheName() + " teleports out.",
+          oCaller.AName() + " teleports in." );
+    }
+
+    return "Usage: goto <user|path>";
+}
+
+
+[$.lib.cmd.creator.trans]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        oHere = oCaller.location;
+
+        // Find the target user by name
+        oTarget = this.loginDaemon.FindUser( sArgs );
+        if( oTarget )
+        {
+            if( !oTarget.location ) return "User has no location.";
+            if( oTarget.location == oHere ) return oTarget.TheName() + " is already here.";
+        }
+        else return "User is not logged on: " + sArgs;
+
+        // Notify the user being moved
+        oTarget.Message( oCaller.TheName() + " teleports you to " + replace( object_path( oHere ), "$", "$$" ) );
+
+        // Move the user
+        return oTarget.Move( oHere, oTarget.TheName() + " teleports out.",
+          oTarget.AName() + " teleports in." );
+    }
+
+    return "Usage: trans <user>";
+}
+
+
+[$.lib.cmd.creator.home]
+-> $.lib.basic.command
+
+home = $.home;
+userList = $.save.user;
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        sArgs = lower_case( sArgs );
+        if( !exists( this.userList, sArgs ) )
+        {
+            return "No such user '" + sArgs + "'.";
+        }
+    }
+    else sArgs = oCaller.username;
+
+    // Find the target room by username
+    if( !objectp(this.home[sArgs]) )
+    {
+        return "User '" + sArgs + "' has no home directory.";
+    }
+
+    oDest = this.home[sArgs];
+
+    if( !objectp(oDest.workroom) )
+    {
+        return "User '" + sArgs + "' has no home room.";
+    }
+
+    oDest = oDest.workroom;
+    if( oCaller.location == oDest ) return "You are already there.";
+
+    return oCaller.Move( oDest, oCaller.TheName() + " teleports out.",
+      oCaller.AName() + " teleports in." );
+}
+
+
+[$.lib.cmd.creator.mk]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Find the parent
+        oTarget = this.FindPathName( sArgs, oCaller.cwd );
+        if( !oTarget ) return "Not found: " + sArgs;
+        sName = oTarget[1];
+        oTarget = oTarget[0];
+
+        if( exists( oTarget, sName ) )
+            return "Already exists: " + sArgs;
+
+        // Create an object with this name
+        oNew = new object( sName, oTarget );
+        return "Created object: " + replace( object_path( oNew ), "$", "$$" );
+    }
+
+    return "Usage: mk <path>";
+}
+
+
+[$.lib.cmd.creator.mkroom]
+-> $.lib.basic.command
+
+newRoom = $.lib.basic.room;
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Find the parent
+        oTarget = this.FindPathName( sArgs, oCaller.cwd );
+        if( !oTarget ) return "Not found: " + sArgs;
+        sName = oTarget[1];
+        oTarget = oTarget[0];
+
+        if( exists( oTarget, sName ) )
+            return "Already exists: " + sArgs;
+
+        // Create an object with this name
+        oNew = new object( sName, oTarget );
+        add_inherit( oNew, this.newRoom );
+
+        return "Created room: " + replace( object_path( oNew ), "$", "$$" );
+    }
+
+    return "Usage: mkroom <path>";
+}
+
+
+[$.lib.cmd.creator.rm]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Find the parent
+        oTarget = this.FindPathName( sArgs, oCaller.cwd );
+        if( !oTarget ) return "Not found: " + sArgs;
+        sName = oTarget[1];
+        oTarget = oTarget[0];
+
+        // Check that the attribute exists
+        if( !exists( oTarget, sName ) )
+            return "Not found: " + sArgs;
+
+        // Check if the target is an object
+        mThing = oTarget[sName];
+        if( childp(mThing) )
+        {
+            // The thing is an actual object
+            // Make sure the object is empty before allowing delete
+            if( sizeof(keys(mThing)) ) return "Object must be empty: " + sArgs;
+
+            // Delete the object
+            delete mThing;
+            remove( oTarget, sName );
+            return "Deleted object: " + sArgs;
+        }
+
+        // Delete the attribute with this name
+        remove( oTarget, sName );
+        return "Removed attribute: " + sArgs;
+    }
+
+    return "Usage: rm [<path>/]<attribute>";
+}
+
+
+[$.lib.cmd.creator.inherit]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    oTarget = oCaller.cwd;
+
+    if( length(sArgs) )
+    {
+        // Find the target object
+        oInherit = find_object( sArgs, oCaller.cwd );
+        if( !oInherit ) return "Not found: " + sArgs;
+        add_inherit( oTarget, oInherit );
+
+        return "Added inherit: " + replace( object_path( oInherit ), "$", "$$" );
+    }
+
+    return "Usage: inherit <object>";
+}
+
+
+[$.lib.cmd.creator.uninherit]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    oTarget = oCaller.cwd;
+
+    if( length(sArgs) )
+    {
+        // Find the target object
+        oInherit = find_object( sArgs, oCaller.cwd );
+        if( !oInherit ) return "Not found: " + sArgs;
+        remove_inherit( oTarget, oInherit );
+
+        return "Removed inherit: " + replace( object_path( oInherit ), "$", "$$" );
+    }
+
+    return "Usage: uninherit <object>";
+}
+
+
+[$.lib.cmd.creator.shutdown]
+-> $.lib.basic.command
+
+DoShutdown( oCaller )
+{
+    // Wait 2 seconds for everyone to quit
+    sleep( 2 );
+    
+    if( oCaller.username == "mario" )
+    {
+        // Shut down the mud
+        shutdown();
+    }
+}
+
+Command( sArgs, oCaller )
+{
+    if( oCaller.username == "mario" )
+    {
+        // Schedule the shutdown (must be on a non-user thread!)
+        thread this.DoShutdown( oCaller );
+        
+        // Quit all users
+        foreach( oUser in this.loginDaemon.Users() )
+        {
+            try oUser.Quit();
+        }
+    }
+    else return "You cannot do that.";
+}
+
+
+[$.lib.cmd.creator.clone]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Find the target
+        oTarget = find_object( sArgs, oCaller.cwd );
+        if( !oTarget ) return "Not found: " + sArgs;
+
+        // Check that the object can be cloned
+        if( !oTarget.Clone ) return "Cannot clone: " + sArgs;
+        if( !(oHere = oCaller.location) ) return "You are in limbo.";
+
+        // Create a clone of the object and put it -here-
+        oClone = oTarget.Clone( oCaller );
+        if( !oClone ) return "Cannot clone: " + sArgs;
+        oClone.Move( oHere, "", oClone.AName() + " is cloned by " + oCaller.TheName() + "." );
+
+        oCaller.RawMessage( "Cloned: " + object_path(oClone) + "\n" );
+        return 1;
+    }
+
+    return "Usage: clone <path>";
+}
+
+
+[$.lib.cmd.creator.dest]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Find the target
+        if( !(oHere = oCaller.location) ) return "You are in limbo.";
+        oTarget = oHere.Present( sArgs, null, oCaller );
+        if( !oTarget ) return "There is no " + sArgs + " here.";
+
+        // Check that the object is a clone
+        if( !clonep(oTarget) ) return "Not a clone.";
+
+        // Move the clone into limbo
+        sName = oTarget.TheName();
+        oTarget.Move( null, oCaller.TheName() + " disintegrates " + sName + ".", "" );
+
+        // Delete the object
+        sName += " (" + object_path(oTarget) + ")\n";
+        delete oTarget;
+        oCaller.RawMessage( "Destructed: " + sName );
+        return 1;
+    }
+
+    return "Usage: dest <thing>";
+}
+
+
+[$.lib.cmd.creator.eval]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Attempt to compile the expression into a function
+        arResult = parse( "function() { return " + sArgs + "; }" );
+
+        // Display any errors
+        sErrors = arResult[1];
+        if( sErrors ) oCaller.Message( "#C" + sErrors[0..-2] );
+
+        // If compiled, bind to this user and execute
+        fnEval = arResult[0];
+        if( fnEval )
+        {
+            oCaller.tempEvalFunction = fnEval;
+            oCaller.RawMessage( to_string( oCaller.tempEvalFunction() ) + "\n" );
+            return;
+        }
+        else if( !sErrors ) return "Expression did not compile.";
+
+        return;
+    }
+
+    return "Usage: eval <expression>";
+}
+
+
+[$.lib.cmd.creator.exec]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Attempt to compile the statements into a function
+        arResult = parse( "function() { " + sArgs + " }" );
+
+        // Display any errors
+        sErrors = arResult[1];
+        if( sErrors ) oCaller.Message( "#C" + sErrors[0..-2] );
+
+        // If compiled, bind to this user and execute
+        fnEval = arResult[0];
+        if( fnEval )
+        {
+            oCaller.tempEvalFunction = fnEval;
+            return to_string( oCaller.tempEvalFunction() );
+        }
+        else if( !sErrors ) return "Statement(s) did not compile.";
+
+        return;
+    }
+
+    return "Usage: exec <statements>";
+}
+
+
+[$.lib.cmd.creator.edit]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    if( length(sArgs) )
+    {
+        // Find the target string or function
+        arTarget = this.FindPathName( sArgs, oCaller.cwd );
+        if( !arTarget ) return "Not found: " + sArgs;
+        oTarget = arTarget[0];
+        sName = arTarget[1];
+        
+        if( exists(oTarget, sName) )
+        {
+            mValue = oTarget[sName];
+
+            // Determine the type
+            bIsFunction = functionp(mValue);
+            if( bIsFunction ) mValue = encode(mValue);
+            if( !stringp(mValue) ) return "Not a string or function: " + sArgs;
+        }
+        else
+        {
+            // Create a new string
+            oCaller.Message( "Creating string: " + sName );
+            mValue = "";
+            bIsFunction = 0;
+        }
+
+        // Open the 'edit' buffer
+        mResult = oCaller.EditOpenBuffer( "edit", mValue, sArgs, bIsFunction );
+        if( mResult != 1 ) return mResult;
+
+        // Accept commands until the editor is closed
+        while( oCaller.EditIsOpen( "edit" ) )
+        {
+            sCmd = trim( oCaller.ReadLine( ": " ) );
+            mResult = oCaller.EditCommand( "edit", sCmd, oCaller );
+            if( stringp(mResult) ) oCaller.Message( mResult );
+            if( !mResult ) oCaller.Message( "Invalid edit command." );
+        }
+    }
+}
+
+
+[$.lib.cmd.admin]
+-> $.lib.cmd.creator
+
+[$.lib.cmd.admin.test]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    a = "hello world";
+}
+
+
+[$.lib.cmd.admin.threads]
+-> $.lib.basic.command
+
+Func()
+{
+    repeat
+    {
+        a = "";
+        for( i = 0; i < 100; i = i + 1 ) a += "z";
+    }
+}
+
+Command( sArgs, oCaller )
+{
+    return;
+
+    for( i = 0; i < 100; i= i + 1 ) thread this.Func();
+    return "Spawned " + i + " threads.";
+}
+
+
+[$.lib.cmd.admin.div]
+-> $.lib.basic.command
+
+Command( sArgs, oCaller )
+{
+    try
+    {
+        sResult = "Div by zero is: " + (1 / 0);
+    }
+    catch( err )
+    {
+        oCaller.ReportError( err );
+    }
+
+    return "Done.";
+}
+

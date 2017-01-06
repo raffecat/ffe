@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>B2E32C15-5F7F-437D-9B4B-CB38D8A7C901</string>
+	<key>IDESourceControlProjectName</key>
+	<string>ffe</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>0EA02F05-2A8D-4A2E-8768-A23536AFB464</key>
+		<string>ssh://bitbucket.org/raffecat/ffe.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>ffe.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>0EA02F05-2A8D-4A2E-8768-A23536AFB464</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://bitbucket.org/raffecat/ffe.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>0EA02F05-2A8D-4A2E-8768-A23536AFB464</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>0EA02F05-2A8D-4A2E-8768-A23536AFB464</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ffe</string>
+		</dict>
+	</array>
+</dict>
+</plist>

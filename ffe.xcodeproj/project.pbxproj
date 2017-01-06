@@ -1,0 +1,352 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		ACC462061AEBA3670051729C /* any.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC461F31AEBA3670051729C /* any.cpp */; };
+		ACC462071AEBA3670051729C /* array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC461F51AEBA3670051729C /* array.cpp */; };
+		ACC462081AEBA3670051729C /* database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC461F71AEBA3670051729C /* database.cpp */; };
+		ACC462091AEBA3670051729C /* function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC461F91AEBA3670051729C /* function.cpp */; };
+		ACC4620A1AEBA3670051729C /* grammar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC461FC1AEBA3670051729C /* grammar.cpp */; };
+		ACC4620B1AEBA3670051729C /* import.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC461FE1AEBA3670051729C /* import.cpp */; };
+		ACC4620C1AEBA3670051729C /* lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC462011AEBA3670051729C /* lexer.cpp */; };
+		ACC4620E1AEBA3670051729C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC462031AEBA3670051729C /* main.cpp */; };
+		ACC4620F1AEBA3670051729C /* mapping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC462041AEBA3670051729C /* mapping.cpp */; };
+		ACC462211AEBA3A00051729C /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC462121AEBA3A00051729C /* object.cpp */; };
+		ACC462221AEBA3A00051729C /* parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC462151AEBA3A00051729C /* parse.cpp */; };
+		ACC462231AEBA3A00051729C /* port.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC462181AEBA3A00051729C /* port.cpp */; };
+		ACC462241AEBA3A00051729C /* string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC4621C1AEBA3A00051729C /* string.cpp */; };
+		ACC462251AEBA3A00051729C /* thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACC4621E1AEBA3A00051729C /* thread.cpp */; };
+		ACC462271AEBB0580051729C /* libdes_crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = ACC462261AEBB0580051729C /* libdes_crypt.c */; };
+		ACC4622B1AEBB0830051729C /* fcrypt_b.c in Sources */ = {isa = PBXBuildFile; fileRef = ACC462281AEBB0830051729C /* fcrypt_b.c */; };
+		ACC4622C1AEBB0830051729C /* fcrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = ACC462291AEBB0830051729C /* fcrypt.c */; };
+		ACC4622D1AEBB0830051729C /* set_key.c in Sources */ = {isa = PBXBuildFile; fileRef = ACC4622A1AEBB0830051729C /* set_key.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AC8E81261AEBA25A00AC588E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AC8E81281AEBA25A00AC588E /* ffe */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ffe; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACC461F21AEBA3670051729C /* any_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = any_impl.h; sourceTree = SOURCE_ROOT; };
+		ACC461F31AEBA3670051729C /* any.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = any.cpp; sourceTree = SOURCE_ROOT; };
+		ACC461F41AEBA3670051729C /* any.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = any.h; sourceTree = SOURCE_ROOT; };
+		ACC461F51AEBA3670051729C /* array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = array.cpp; sourceTree = SOURCE_ROOT; };
+		ACC461F61AEBA3670051729C /* array.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = array.h; sourceTree = SOURCE_ROOT; };
+		ACC461F71AEBA3670051729C /* database.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = database.cpp; sourceTree = SOURCE_ROOT; };
+		ACC461F81AEBA3670051729C /* database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = database.h; sourceTree = SOURCE_ROOT; };
+		ACC461F91AEBA3670051729C /* function.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = function.cpp; sourceTree = SOURCE_ROOT; };
+		ACC461FA1AEBA3670051729C /* function.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = function.h; sourceTree = SOURCE_ROOT; };
+		ACC461FB1AEBA3670051729C /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = SOURCE_ROOT; };
+		ACC461FC1AEBA3670051729C /* grammar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = grammar.cpp; sourceTree = SOURCE_ROOT; };
+		ACC461FD1AEBA3670051729C /* grammar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = grammar.h; sourceTree = SOURCE_ROOT; };
+		ACC461FE1AEBA3670051729C /* import.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = import.cpp; sourceTree = SOURCE_ROOT; };
+		ACC461FF1AEBA3670051729C /* import.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = import.h; sourceTree = SOURCE_ROOT; };
+		ACC462001AEBA3670051729C /* index.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = index.h; sourceTree = SOURCE_ROOT; };
+		ACC462011AEBA3670051729C /* lexer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lexer.cpp; sourceTree = SOURCE_ROOT; };
+		ACC462031AEBA3670051729C /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
+		ACC462041AEBA3670051729C /* mapping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mapping.cpp; sourceTree = SOURCE_ROOT; };
+		ACC462051AEBA3670051729C /* mapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mapping.h; sourceTree = SOURCE_ROOT; };
+		ACC462121AEBA3A00051729C /* object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = object.cpp; sourceTree = SOURCE_ROOT; };
+		ACC462131AEBA3A00051729C /* object.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = object.h; sourceTree = SOURCE_ROOT; };
+		ACC462141AEBA3A00051729C /* opcode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opcode.h; sourceTree = SOURCE_ROOT; };
+		ACC462151AEBA3A00051729C /* parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse.cpp; sourceTree = SOURCE_ROOT; };
+		ACC462161AEBA3A00051729C /* parse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse.h; sourceTree = SOURCE_ROOT; };
+		ACC462171AEBA3A00051729C /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = platform.h; sourceTree = SOURCE_ROOT; };
+		ACC462181AEBA3A00051729C /* port.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = port.cpp; sourceTree = SOURCE_ROOT; };
+		ACC462191AEBA3A00051729C /* port.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = port.h; sourceTree = SOURCE_ROOT; };
+		ACC4621A1AEBA3A00051729C /* result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = result.h; sourceTree = SOURCE_ROOT; };
+		ACC4621B1AEBA3A00051729C /* runtime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = runtime.h; sourceTree = SOURCE_ROOT; };
+		ACC4621C1AEBA3A00051729C /* string.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = string.cpp; sourceTree = SOURCE_ROOT; };
+		ACC4621D1AEBA3A00051729C /* string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = string.h; sourceTree = SOURCE_ROOT; };
+		ACC4621E1AEBA3A00051729C /* thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = thread.cpp; sourceTree = SOURCE_ROOT; };
+		ACC4621F1AEBA3A00051729C /* thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = thread.h; sourceTree = SOURCE_ROOT; };
+		ACC462201AEBA3A00051729C /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = SOURCE_ROOT; };
+		ACC462261AEBB0580051729C /* libdes_crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libdes_crypt.c; sourceTree = SOURCE_ROOT; };
+		ACC462281AEBB0830051729C /* fcrypt_b.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fcrypt_b.c; path = "libdes-l/fcrypt_b.c"; sourceTree = SOURCE_ROOT; };
+		ACC462291AEBB0830051729C /* fcrypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fcrypt.c; path = "libdes-l/fcrypt.c"; sourceTree = SOURCE_ROOT; };
+		ACC4622A1AEBB0830051729C /* set_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = set_key.c; path = "libdes-l/set_key.c"; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AC8E81251AEBA25A00AC588E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AC8E811F1AEBA25A00AC588E = {
+			isa = PBXGroup;
+			children = (
+				AC8E812A1AEBA25A00AC588E /* ffe */,
+				AC8E81291AEBA25A00AC588E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AC8E81291AEBA25A00AC588E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AC8E81281AEBA25A00AC588E /* ffe */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AC8E812A1AEBA25A00AC588E /* ffe */ = {
+			isa = PBXGroup;
+			children = (
+				ACC462281AEBB0830051729C /* fcrypt_b.c */,
+				ACC462291AEBB0830051729C /* fcrypt.c */,
+				ACC4622A1AEBB0830051729C /* set_key.c */,
+				ACC462261AEBB0580051729C /* libdes_crypt.c */,
+				ACC462121AEBA3A00051729C /* object.cpp */,
+				ACC462131AEBA3A00051729C /* object.h */,
+				ACC462141AEBA3A00051729C /* opcode.h */,
+				ACC462151AEBA3A00051729C /* parse.cpp */,
+				ACC462161AEBA3A00051729C /* parse.h */,
+				ACC462171AEBA3A00051729C /* platform.h */,
+				ACC462181AEBA3A00051729C /* port.cpp */,
+				ACC462191AEBA3A00051729C /* port.h */,
+				ACC4621A1AEBA3A00051729C /* result.h */,
+				ACC4621B1AEBA3A00051729C /* runtime.h */,
+				ACC4621C1AEBA3A00051729C /* string.cpp */,
+				ACC4621D1AEBA3A00051729C /* string.h */,
+				ACC4621E1AEBA3A00051729C /* thread.cpp */,
+				ACC4621F1AEBA3A00051729C /* thread.h */,
+				ACC462201AEBA3A00051729C /* types.h */,
+				ACC461F21AEBA3670051729C /* any_impl.h */,
+				ACC461F31AEBA3670051729C /* any.cpp */,
+				ACC461F41AEBA3670051729C /* any.h */,
+				ACC461F51AEBA3670051729C /* array.cpp */,
+				ACC461F61AEBA3670051729C /* array.h */,
+				ACC461F71AEBA3670051729C /* database.cpp */,
+				ACC461F81AEBA3670051729C /* database.h */,
+				ACC461F91AEBA3670051729C /* function.cpp */,
+				ACC461FA1AEBA3670051729C /* function.h */,
+				ACC461FB1AEBA3670051729C /* global.h */,
+				ACC461FC1AEBA3670051729C /* grammar.cpp */,
+				ACC461FD1AEBA3670051729C /* grammar.h */,
+				ACC461FE1AEBA3670051729C /* import.cpp */,
+				ACC461FF1AEBA3670051729C /* import.h */,
+				ACC462001AEBA3670051729C /* index.h */,
+				ACC462011AEBA3670051729C /* lexer.cpp */,
+				ACC462031AEBA3670051729C /* main.cpp */,
+				ACC462041AEBA3670051729C /* mapping.cpp */,
+				ACC462051AEBA3670051729C /* mapping.h */,
+			);
+			path = ffe;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AC8E81271AEBA25A00AC588E /* ffe */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC8E81311AEBA25A00AC588E /* Build configuration list for PBXNativeTarget "ffe" */;
+			buildPhases = (
+				AC8E81241AEBA25A00AC588E /* Sources */,
+				AC8E81251AEBA25A00AC588E /* Frameworks */,
+				AC8E81261AEBA25A00AC588E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ffe;
+			productName = ffe;
+			productReference = AC8E81281AEBA25A00AC588E /* ffe */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AC8E81201AEBA25A00AC588E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+			};
+			buildConfigurationList = AC8E81231AEBA25A00AC588E /* Build configuration list for PBXProject "ffe" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = AC8E811F1AEBA25A00AC588E;
+			productRefGroup = AC8E81291AEBA25A00AC588E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AC8E81271AEBA25A00AC588E /* ffe */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AC8E81241AEBA25A00AC588E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ACC462061AEBA3670051729C /* any.cpp in Sources */,
+				ACC462211AEBA3A00051729C /* object.cpp in Sources */,
+				ACC462241AEBA3A00051729C /* string.cpp in Sources */,
+				ACC4620B1AEBA3670051729C /* import.cpp in Sources */,
+				ACC4622B1AEBB0830051729C /* fcrypt_b.c in Sources */,
+				ACC462251AEBA3A00051729C /* thread.cpp in Sources */,
+				ACC462271AEBB0580051729C /* libdes_crypt.c in Sources */,
+				ACC4620C1AEBA3670051729C /* lexer.cpp in Sources */,
+				ACC4620A1AEBA3670051729C /* grammar.cpp in Sources */,
+				ACC4620F1AEBA3670051729C /* mapping.cpp in Sources */,
+				ACC4622D1AEBB0830051729C /* set_key.c in Sources */,
+				ACC462071AEBA3670051729C /* array.cpp in Sources */,
+				ACC462231AEBA3A00051729C /* port.cpp in Sources */,
+				ACC462081AEBA3670051729C /* database.cpp in Sources */,
+				ACC462091AEBA3670051729C /* function.cpp in Sources */,
+				ACC4622C1AEBB0830051729C /* fcrypt.c in Sources */,
+				ACC4620E1AEBA3670051729C /* main.cpp in Sources */,
+				ACC462221AEBA3A00051729C /* parse.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AC8E812F1AEBA25A00AC588E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				"GCC_OPTIMIZATION_LEVEL[arch=i386]" = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		AC8E81301AEBA25A00AC588E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		AC8E81321AEBA25A00AC588E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CONFIGURATION_BUILD_DIR = /Users/mario/code/ffe;
+				CONFIGURATION_TEMP_DIR = /Users/mario/code/ffe;
+				INSTALL_PATH = /Users/mario/code/ffe;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = NO;
+				SYMROOT = /Users/mario/code/ffe;
+			};
+			name = Debug;
+		};
+		AC8E81331AEBA25A00AC588E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				INSTALL_PATH = /Users/mario/code/ffe;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = NO;
+				SYMROOT = /Users/mario/code/ffe;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AC8E81231AEBA25A00AC588E /* Build configuration list for PBXProject "ffe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC8E812F1AEBA25A00AC588E /* Debug */,
+				AC8E81301AEBA25A00AC588E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AC8E81311AEBA25A00AC588E /* Build configuration list for PBXNativeTarget "ffe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC8E81321AEBA25A00AC588E /* Debug */,
+				AC8E81331AEBA25A00AC588E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AC8E81201AEBA25A00AC588E /* Project object */;
+}

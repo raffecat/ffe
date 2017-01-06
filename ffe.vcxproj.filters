@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{e42a071f-62cd-4938-8226-a01d4a904430}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{909651be-afc0-4402-9dbd-5799235041aa}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Grammar Files">
+      <UniqueIdentifier>{7d05bd0b-945c-461e-b493-080b9c047d74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libdes Files">
+      <UniqueIdentifier>{ec76a55e-719d-4db2-bca7-c49d5da989b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{c29144ff-7c8e-4dd8-84ce-71f1e0c33150}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="any.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="array.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="database.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="function.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="grammar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="import.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mapping.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="parse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="port.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libdes-l\fcrypt.c">
+      <Filter>Libdes Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libdes-l\fcrypt_b.c">
+      <Filter>Libdes Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libdes_crypt.c">
+      <Filter>Libdes Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libdes-l\set_key.c">
+      <Filter>Libdes Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="any.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="any_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="database.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="function.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="grammar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="import.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapping.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opcode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="parse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="port.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="result.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="runtime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="grammar.y">
+      <Filter>Grammar Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
